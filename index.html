@@ -1,0 +1,180 @@
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>No Pain No Gain</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#2b2c2e;--surf:#343537;--surf2:#3b3c3e;--line:#48494c;--text:#EDEBE6;--muted:#a7a5a0;--brass:#C9A227}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Inter,sans-serif}
+.wrap{max-width:480px;margin:0 auto;padding:20px 16px}
+h1{font-size:20px;text-transform:uppercase;letter-spacing:.05em}
+input,select,button{width:100%;padding:10px;margin:6px 0;background:var(--surf2);border:1px solid var(--line);color:var(--text);border-radius:8px;font-size:14px}
+button{background:var(--brass);color:#000;font-weight:700;cursor:pointer;border:none}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+.hide{display:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.stat{background:var(--surf2);border-radius:8px;padding:8px;text-align:center;font-size:11px}
+.stat b{display:block;font-size:16px}
+#results div{padding:6px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.qtyRow{display:flex;gap:6px}
+.qtyRow input{flex:2}.qtyRow select{flex:1}
+</style></head><body><div class="wrap">
+<h1>NO PAIN <span style="color:var(--brass)">NO GAIN</span></h1>
+
+<div id="auth" class="card">
+  <input id="email" placeholder="email">
+  <input id="pass" type="password" placeholder="mot de passe">
+  <button onclick="signup()">Créer un compte</button>
+  <button onclick="login()">Se connecter</button>
+</div>
+
+<div id="profileSetup" class="card hide">
+  <h3>Ton profil</h3>
+  <input id="weight" type="number" placeholder="Poids (kg)">
+  <input id="height" type="number" placeholder="Taille (cm)">
+  <input id="age" type="number" placeholder="Âge">
+  <select id="sex"><option value="h">Homme</option><option value="f">Femme</option></select>
+  <select id="activity">
+    <option value="1.2">Sédentaire</option>
+    <option value="1.375">Léger (1-3x/sem)</option>
+    <option value="1.55">Modéré (3-5x/sem)</option>
+    <option value="1.725">Actif (6-7x/sem)</option>
+    <option value="1.9">Très actif</option>
+  </select>
+  <button onclick="saveProfile()">Calculer mes cibles</button>
+</div>
+
+<div id="app" class="hide">
+  <div class="card">
+    <input id="foodSearch" placeholder="Chercher un aliment...">
+    <div id="results"></div>
+  </div>
+
+  <div id="qtyBox" class="card hide">
+    <div id="qtyLabel" style="margin-bottom:6px;font-size:13px"></div>
+    <div class="qtyRow">
+      <input id="qtyVal" type="number" placeholder="Quantité" value="100">
+      <select id="qtyUnit">
+        <option value="g">grammes</option>
+        <option value="cas">CAS (15g)</option>
+        <option value="cac">CAC (5g)</option>
+        <option value="poignee">Poignée (25g)</option>
+      </select>
+    </div>
+    <button onclick="confirmAdd()">Ajouter</button>
+  </div>
+
+  <div class="card">
+    <div id="todayStats" class="stats"></div>
+  </div>
+  <div class="card" id="mealList"></div>
+</div>
+
+</div>
+<script>
+const sb = window.supabase.createClient('https://dbizbwitbhsirbvetzmw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaXpid2l0YmhzaXJidmV0em13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjExMTQsImV4cCI6MjEwMTY5NzExNH0.HJ2pvLF-9beT2x6OGTflp88ASHzmrNyTA5BjBjXBNmY');
+let user=null, profile=null, pending=null;
+
+async function signup(){
+  const {data,error}=await sb.auth.signUp({email:val('email'),password:val('pass')});
+  if(error) return alert(error.message);
+  alert('Compte créé. Vérifie ton email si confirmation demandée, puis connecte-toi.');
+}
+async function login(){
+  const {data,error}=await sb.auth.signInWithPassword({email:val('email'),password:val('pass')});
+  if(error) return alert(error.message);
+  boot();
+}
+function val(id){return document.getElementById(id).value;}
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) return;
+  user=session.user;
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
+  document.getElementById('auth').classList.add('hide');
+  if(!p || !p.kcal_target){
+    document.getElementById('profileSetup').classList.remove('hide');
+  } else {
+    profile=p;
+    document.getElementById('app').classList.remove('hide');
+    loadToday();
+  }
+}
+
+async function saveProfile(){
+  const w=+val('weight'), h=+val('height'), a=+val('age'), sex=val('sex'), act=+val('activity');
+  const bmr = sex==='h' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  const maint = bmr*act;
+  const kcal = Math.round(maint*0.85);
+  const protein = Math.round(w*1.8);
+  const fatT = Math.round(w*0.8);
+  const carbT = Math.round(w*2);
+  await sb.from('profiles').upsert({id:user.id,weight_kg:w,height_cm:h,age:a,sex,activity_mult:act,
+    kcal_target:kcal,protein_target:protein,carb_target:carbT,fat_target:fatT});
+  profile={weight_kg:w,kcal_target:kcal,protein_target:protein,carb_target:carbT,fat_target:fatT};
+  document.getElementById('profileSetup').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  loadToday();
+}
+
+let searchTimeout;
+document.getElementById('foodSearch').addEventListener('input',e=>{
+  clearTimeout(searchTimeout);
+  const q=e.target.value;
+  if(q.length<3) return document.getElementById('results').innerHTML='';
+  searchTimeout=setTimeout(()=>searchFood(q),400);
+});
+async function searchFood(q){
+  const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=8&fields=product_name,nutriments`);
+  const data=await r.json();
+  const box=document.getElementById('results');
+  box.innerHTML='';
+  (data.products||[]).forEach(p=>{
+    if(!p.product_name || !p.nutriments) return;
+    const n=p.nutriments;
+    const div=document.createElement('div');
+    div.textContent=`${p.product_name} — ${Math.round(n['energy-kcal_100g']||0)}kcal/100g`;
+    div.onclick=()=>openQtyBox(p.product_name,n);
+    box.appendChild(div);
+  });
+}
+
+function openQtyBox(name,n){
+  pending={name,n};
+  document.getElementById('qtyLabel').textContent=name;
+  document.getElementById('qtyBox').classList.remove('hide');
+  document.getElementById('qtyVal').focus();
+}
+
+const UNIT_G={g:1,cas:15,cac:5,poignee:25};
+async function confirmAdd(){
+  if(!pending) return;
+  const qty=+val('qtyVal'), unit=val('qtyUnit');
+  const grams=qty*UNIT_G[unit];
+  const f=grams/100, {name,n}=pending;
+  await sb.from('meals').insert({user_id:user.id,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
+    p:Math.round((n.proteins_100g||0)*f), c:Math.round((n.carbohydrates_100g||0)*f),
+    f:Math.round((n.fat_100g||0)*f), kcal:Math.round((n['energy-kcal_100g']||0)*f)});
+  document.getElementById('foodSearch').value='';
+  document.getElementById('results').innerHTML='';
+  document.getElementById('qtyBox').classList.add('hide');
+  pending=null;
+  loadToday();
+}
+
+async function loadToday(){
+  const today=new Date().toISOString().slice(0,10);
+  const {data:meals}=await sb.from('meals').select('*').eq('user_id',user.id).eq('date',today).order('created_at');
+  const tot=(meals||[]).reduce((a,m)=>({p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal}),{p:0,c:0,f:0,k:0});
+  document.getElementById('todayStats').innerHTML=`
+    <div class="stat">Kcal<b>${tot.k}</b>/${profile.kcal_target}</div>
+    <div class="stat">Prot<b>${tot.p}</b>/${profile.protein_target}g</div>
+    <div class="stat">Gluc<b>${tot.c}</b>/${profile.carb_target}g</div>
+    <div class="stat">Lip<b>${tot.f}</b>/${profile.fat_target}g</div>`;
+  document.getElementById('mealList').innerHTML=(meals||[]).map(m=>
+    `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal</div>`
+  ).join('') || '<span style="color:var(--muted)">Aucun repas aujourd\'hui</span>';
+}
+
+boot();
+</script></body></html>
