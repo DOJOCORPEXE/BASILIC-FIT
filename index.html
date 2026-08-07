@@ -2,6 +2,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>No Pain No Gain</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#2b2c2e;--surf:#343537;--surf2:#3b3c3e;--line:#48494c;--text:#EDEBE6;--muted:#a7a5a0;--brass:#C9A227}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Inter,sans-serif}
@@ -17,8 +18,34 @@ button{background:var(--brass);color:#000;font-weight:700;cursor:pointer;border:
 #results div{padding:6px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
 .qtyRow{display:flex;gap:6px}
 .qtyRow input{flex:2}.qtyRow select{flex:1}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tabs button{background:var(--surf2);color:var(--text);font-weight:400}
+.tabs button.active{background:var(--brass);color:#000;font-weight:700}
+.exoCard{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.exoCard a{color:var(--brass)}
+.headerRow{display:flex;align-items:center;justify-content:space-between;max-width:480px;margin:0 auto 8px}
+.avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid var(--brass);cursor:pointer;flex-shrink:0;background:var(--surf2)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.dayCard{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.dayHead{font-size:12px;color:var(--brass);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.mealRow{padding:6px 0;border-top:1px solid var(--line);font-size:12.5px}
+.mealRow:first-child{border-top:none}
+.ringGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.ringWrap{position:relative;width:60px;height:60px;margin:4px auto 0}
+.ringWrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringTrack{fill:none;stroke:var(--line);stroke-width:6}
+.ringFill{fill:none;stroke-width:6;stroke-linecap:round}
+.ringFill.g{stroke:#22c55e}.ringFill.y{stroke:#f59e0b}.ringFill.r{stroke:#ef4444}.ringFill.d{stroke:#050505}
+.ringCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.ringCenter span{color:#ef4444}
+.ringCenter.dg{color:#ef4444}
+.ringTarget{font-size:8px;color:var(--muted);margin-top:2px}
+.ringLabel{font-size:9px;text-transform:uppercase;color:var(--muted);text-align:center}
 </style></head><body><div class="wrap">
-<h1>NO PAIN <span style="color:var(--brass)">NO GAIN</span></h1>
+<div class="headerRow">
+  <h1>NO PAIN <span style="color:var(--brass)">NO GAIN</span></h1>
+  <div class="avatar hide" id="avatarBtn" onclick="showTab('profil')"><img id="avatarImg" src=""></div>
+</div>
 
 <div id="auth" class="card">
   <input id="email" placeholder="email">
@@ -33,18 +60,46 @@ button{background:var(--brass);color:#000;font-weight:700;cursor:pointer;border:
   <input id="height" type="number" placeholder="Taille (cm)">
   <input id="age" type="number" placeholder="Âge">
   <select id="sex"><option value="h">Homme</option><option value="f">Femme</option></select>
-  <select id="activity">
-    <option value="1.2">Sédentaire</option>
-    <option value="1.375">Léger (1-3x/sem)</option>
-    <option value="1.55">Modéré (3-5x/sem)</option>
-    <option value="1.725">Actif (6-7x/sem)</option>
-    <option value="1.9">Très actif</option>
+  <input id="bodyfat" type="number" placeholder="% masse grasse (optionnel, plus précis)">
+  <label style="font-size:11px;color:var(--muted)">Activité hors sport (travail/quotidien)</label>
+  <select id="neatLevel">
+    <option value="sed">Sédentaire (bureau/télétravail)</option>
+    <option value="leger">Léger (debout, marche régulière)</option>
+    <option value="actif">Actif (physique au quotidien)</option>
+  </select>
+  <div class="qtyRow">
+    <input id="sessionsWeek" type="number" placeholder="Séances sport/sem" value="4">
+    <input id="sessionDuration" type="number" placeholder="Durée moy. (min)" value="60">
+  </div>
+  <select id="intensity">
+    <option value="low">Intensité légère</option>
+    <option value="med">Intensité modérée</option>
+    <option value="high">Intensité élevée</option>
+  </select>
+  <select id="goal">
+    <option value="seche">Sèche (perte de gras)</option>
+    <option value="maintien">Maintien</option>
+    <option value="prise">Prise de masse</option>
+  </select>
+  <select id="aggressiveness">
+    <option value="doux">Douce</option>
+    <option value="mod">Modérée</option>
+    <option value="agressif">Agressive</option>
   </select>
   <button onclick="saveProfile()">Calculer mes cibles</button>
 </div>
 
 <div id="app" class="hide">
+  <div class="tabs">
+    <button id="tabNutri" class="active" onclick="showTab('nutri')">Nutrition</button>
+    <button id="tabProg" onclick="showTab('prog')">Programme</button>
+    <button id="tabSuivi" onclick="showTab('suivi')">Suivi</button>
+  </div>
+
+  <div id="nutriPane">
   <div class="card">
+    <label style="font-size:11px;color:var(--muted)">Date du repas</label>
+    <input id="mealDate" type="date">
     <input id="foodSearch" placeholder="Chercher un aliment...">
     <div id="results"></div>
   </div>
@@ -63,10 +118,102 @@ button{background:var(--brass);color:#000;font-weight:700;cursor:pointer;border:
     <button onclick="confirmAdd()">Ajouter</button>
   </div>
 
-  <div class="card">
-    <div id="todayStats" class="stats"></div>
+  <div id="nutriDays"></div>
   </div>
-  <div class="card" id="mealList"></div>
+
+  <div id="progPane" class="hide">
+    <div class="card">
+      <b>Tes séances</b>
+      <button onclick="toggleCreate()" style="margin-top:6px">+ Créer / ajouter des exercices</button>
+      <div id="myProgram"></div>
+    </div>
+    <div id="createZone" class="hide">
+      <div class="card">
+        <b>Nouvelle séance</b>
+        <div class="qtyRow">
+          <input id="newSessionName" placeholder="Ex: Bras Épaule A">
+          <button style="flex:1" onclick="createSession()">Créer</button>
+        </div>
+      </div>
+      <div class="card">
+        <b>Bibliothèque d'exercices</b>
+        <input id="exoSearch" placeholder="Filtrer par groupe musculaire..." oninput="renderLibrary()">
+        <div id="library"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="suiviPane" class="hide">
+    <div class="card">
+      <b>Noter un résultat</b>
+      <select id="logExo" onchange="onLogExoChange()"></select>
+      <div id="lastWeight" style="font-size:12px;color:var(--muted);margin:2px 0"></div>
+      <div class="qtyRow">
+        <input id="logWeight" type="number" placeholder="Poids (kg)">
+        <input id="logSets" type="number" placeholder="Séries">
+      </div>
+      <input id="logReps" placeholder="Reps (ex: 10,10,9,8)">
+      <button onclick="addLog()">Ajouter</button>
+    </div>
+    <div class="card">
+      <b>Progression</b>
+      <canvas id="progChart" height="180"></canvas>
+    </div>
+    <div class="card" id="logHistory"></div>
+  </div>
+
+  <div id="profilPane" class="hide">
+    <div class="card">
+      <b>Photo de profil</b>
+      <input id="avatarFile" type="file" accept="image/*" onchange="uploadAvatar(this.files[0])">
+    </div>
+    <div class="card">
+      <b>Cibles actuelles</b>
+      <div id="targetSummary" style="font-size:13px;color:var(--muted);margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <b>Informations</b>
+      <input id="pWeight" type="number" placeholder="Poids (kg)">
+      <input id="pHeight" type="number" placeholder="Taille (cm)">
+      <input id="pAge" type="number" placeholder="Âge">
+      <select id="pSex"><option value="h">Homme</option><option value="f">Femme</option></select>
+      <input id="pBodyfat" type="number" placeholder="% masse grasse (optionnel)">
+      <label style="font-size:11px;color:var(--muted)">Activité hors sport</label>
+      <select id="pNeatLevel">
+        <option value="sed">Sédentaire</option>
+        <option value="leger">Léger</option>
+        <option value="actif">Actif</option>
+      </select>
+      <div class="qtyRow">
+        <input id="pSessionsWeek" type="number" placeholder="Séances/sem">
+        <input id="pSessionDuration" type="number" placeholder="Durée (min)">
+      </div>
+      <select id="pIntensity">
+        <option value="low">Intensité légère</option>
+        <option value="med">Intensité modérée</option>
+        <option value="high">Intensité élevée</option>
+      </select>
+      <select id="pGoal">
+        <option value="seche">Sèche</option>
+        <option value="maintien">Maintien</option>
+        <option value="prise">Prise de masse</option>
+      </select>
+      <select id="pAggressiveness">
+        <option value="doux">Douce</option>
+        <option value="mod">Modérée</option>
+        <option value="agressif">Agressive</option>
+      </select>
+      <button onclick="updateProfile()">Recalculer et sauvegarder</button>
+    </div>
+    <div class="card">
+      <b>Suivi du poids</b>
+      <div class="qtyRow">
+        <input id="weightLogVal" type="number" placeholder="Poids aujourd'hui (kg)">
+        <button style="flex:1" onclick="logWeight()">Noter</button>
+      </div>
+      <canvas id="weightChart" height="160"></canvas>
+    </div>
+  </div>
 </div>
 
 </div>
@@ -97,24 +244,145 @@ async function boot(){
   } else {
     profile=p;
     document.getElementById('app').classList.remove('hide');
+    document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
+    document.getElementById('avatarBtn').classList.remove('hide');
+    document.getElementById('avatarImg').src=p.avatar_url||'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%233b3c3e%27/%3E%3Ctext x=%2720%27 y=%2726%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27%23a7a5a0%27%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
     loadToday();
   }
 }
 
-async function saveProfile(){
-  const w=+val('weight'), h=+val('height'), a=+val('age'), sex=val('sex'), act=+val('activity');
-  const bmr = sex==='h' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
-  const maint = bmr*act;
-  const kcal = Math.round(maint*0.85);
+function computeTargets(prof){
+  const {weight_kg:w,height_cm:h,age:a,sex,body_fat_pct:bf,neat_level,sessions_per_week:sw,session_duration_min:sd,intensity,goal,aggressiveness:ag}=prof;
+  const bmr = bf ? 370 + 21.6*(w*(1-bf/100)) : (sex==='h' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161);
+  const neatMult = {sed:1.2, leger:1.35, actif:1.5}[neat_level]||1.2;
+  const intensityKcalMin = {low:5, med:7, high:9}[intensity]||7;
+  const exercisePerDay = (sw*sd*intensityKcalMin)/7;
+  const maintenance = bmr*neatMult + exercisePerDay;
+  const goalMult = {
+    seche:{doux:0.92, mod:0.85, agressif:0.78},
+    maintien:{doux:1.0, mod:1.0, agressif:1.0},
+    prise:{doux:1.05, mod:1.10, agressif:1.15}
+  }[goal][ag];
+  const kcal = Math.round(maintenance*goalMult);
   const protein = Math.round(w*1.8);
   const fatT = Math.round(w*0.8);
-  const carbT = Math.round(w*2);
-  await sb.from('profiles').upsert({id:user.id,weight_kg:w,height_cm:h,age:a,sex,activity_mult:act,
-    kcal_target:kcal,protein_target:protein,carb_target:carbT,fat_target:fatT});
-  profile={weight_kg:w,kcal_target:kcal,protein_target:protein,carb_target:carbT,fat_target:fatT};
+  const carbT = Math.max(0, Math.round((kcal - protein*4 - fatT*9)/4));
+  return {kcal_target:kcal, protein_target:protein, fat_target:fatT, carb_target:carbT, maintenance:Math.round(maintenance)};
+}
+async function saveProfile(){
+  const prof={
+    weight_kg:+val('weight'), height_cm:+val('height'), age:+val('age'), sex:val('sex'),
+    body_fat_pct: val('bodyfat')?+val('bodyfat'):null,
+    neat_level:val('neatLevel'), sessions_per_week:+val('sessionsWeek'), session_duration_min:+val('sessionDuration'),
+    intensity:val('intensity'), goal:val('goal'), aggressiveness:val('aggressiveness')
+  };
+  const t=computeTargets(prof);
+  await sb.from('profiles').upsert({id:user.id,...prof,...t,last_adjust_date:new Date().toISOString().slice(0,10)});
+  profile={...prof,...t};
   document.getElementById('profileSetup').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
+  document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
   loadToday();
+}
+async function changeGoal(goal){
+  profile.goal=goal;
+  const t=computeTargets(profile);
+  await sb.from('profiles').update({goal,...t}).eq('id',user.id);
+  profile={...profile,...t};
+  loadToday();
+}
+async function loadProfilTab(){
+  document.getElementById('pWeight').value=profile.weight_kg;
+  document.getElementById('pHeight').value=profile.height_cm;
+  document.getElementById('pAge').value=profile.age;
+  document.getElementById('pSex').value=profile.sex;
+  document.getElementById('pBodyfat').value=profile.body_fat_pct||'';
+  document.getElementById('pNeatLevel').value=profile.neat_level;
+  document.getElementById('pSessionsWeek').value=profile.sessions_per_week;
+  document.getElementById('pSessionDuration').value=profile.session_duration_min;
+  document.getElementById('pIntensity').value=profile.intensity;
+  document.getElementById('pGoal').value=profile.goal;
+  document.getElementById('pAggressiveness').value=profile.aggressiveness;
+  document.getElementById('targetSummary').innerHTML=`Maintenance ~${profile.maintenance} kcal<br>Cible : ${profile.kcal_target} kcal — P${profile.protein_target}g / G${profile.carb_target}g / L${profile.fat_target}g`;
+  const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
+  drawWeightChart(logs||[]);
+}
+async function uploadAvatar(file){
+  if(!file) return;
+  const img=new Image();
+  const reader=new FileReader();
+  reader.onload=e=>{ img.src=e.target.result; };
+  reader.readAsDataURL(file);
+  await new Promise(res=>reader.onloadend=res);
+  await new Promise(res=>img.onload=res);
+  const canvas=document.createElement('canvas');
+  canvas.width=160; canvas.height=160;
+  const ctx=canvas.getContext('2d');
+  const size=Math.min(img.width,img.height);
+  ctx.drawImage(img,(img.width-size)/2,(img.height-size)/2,size,size,0,0,160,160);
+  const dataUrl=canvas.toDataURL('image/jpeg',0.7);
+  await sb.from('profiles').update({avatar_url:dataUrl}).eq('id',user.id);
+  profile.avatar_url=dataUrl;
+  document.getElementById('avatarImg').src=dataUrl;
+}
+async function updateProfile(){
+  const prof={
+    weight_kg:+val('pWeight'), height_cm:+val('pHeight'), age:+val('pAge'), sex:val('pSex'),
+    body_fat_pct: val('pBodyfat')?+val('pBodyfat'):null,
+    neat_level:val('pNeatLevel'), sessions_per_week:+val('pSessionsWeek'), session_duration_min:+val('pSessionDuration'),
+    intensity:val('pIntensity'), goal:val('pGoal'), aggressiveness:val('pAggressiveness')
+  };
+  const t=computeTargets(prof);
+  await sb.from('profiles').update({...prof,...t}).eq('id',user.id);
+  profile={...profile,...prof,...t};
+  loadProfilTab();
+  loadToday();
+  alert('Profil mis à jour.');
+}
+let weightChart=null;
+function drawWeightChart(logs){
+  const ctx=document.getElementById('weightChart');
+  if(weightChart) weightChart.destroy();
+  weightChart=new Chart(ctx,{type:'line',data:{
+    labels:logs.map(l=>l.date),
+    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#C9A227',backgroundColor:'rgba(201,162,39,.15)',tension:.2,fill:true}]
+  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+async function logWeight(){
+  const w=+val('weightLogVal');
+  if(!w) return;
+  await sb.from('weight_logs').insert({user_id:user.id,weight:w});
+  document.getElementById('weightLogVal').value='';
+  await checkAutoAdjust();
+  loadProfilTab();
+}
+async function checkAutoAdjust(){
+  const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
+  if(!logs || logs.length<2) return;
+  const last=logs[logs.length-1], daysSinceAdjust=profile.last_adjust_date ? (new Date(last.date)-new Date(profile.last_adjust_date))/86400000 : 999;
+  if(daysSinceAdjust<14) return;
+  const ref=logs.find(l=>(new Date(last.date)-new Date(l.date))/86400000>=10) || logs[0];
+  const days=(new Date(last.date)-new Date(ref.date))/86400000;
+  if(days<7) return;
+  const actualRateWeek=((last.weight-ref.weight)/days)*7;
+  const expectedRateWeek=((profile.kcal_target-profile.maintenance)*7)/7700;
+  let adjustPct=0;
+  if(profile.goal==='seche' && actualRateWeek > expectedRateWeek*0.5) adjustPct=-0.05;
+  else if(profile.goal==='seche' && actualRateWeek < expectedRateWeek*1.6) adjustPct=0.04;
+  else if(profile.goal==='prise' && actualRateWeek < expectedRateWeek*0.5) adjustPct=0.05;
+  else if(profile.goal==='prise' && actualRateWeek > expectedRateWeek*1.6) adjustPct=-0.04;
+  else if(profile.goal==='maintien' && Math.abs(actualRateWeek)>0.3) adjustPct = actualRateWeek>0 ? -0.03 : 0.03;
+  if(adjustPct!==0){
+    const newKcal=Math.round(profile.kcal_target*(1+adjustPct));
+    const carbT=Math.max(0,Math.round((newKcal-profile.protein_target*4-profile.fat_target*9)/4));
+    await sb.from('profiles').update({kcal_target:newKcal,carb_target:carbT,last_adjust_date:last.date}).eq('id',user.id);
+    profile.kcal_target=newKcal; profile.carb_target=carbT; profile.last_adjust_date=last.date;
+    alert(`Cible calorique ajustée automatiquement à ${newKcal} kcal (progression réelle : ${actualRateWeek.toFixed(2)}kg/sem).`);
+    loadToday();
+  } else {
+    await sb.from('profiles').update({last_adjust_date:last.date}).eq('id',user.id);
+    profile.last_adjust_date=last.date;
+  }
 }
 
 let searchTimeout;
@@ -152,7 +420,8 @@ async function confirmAdd(){
   const qty=+val('qtyVal'), unit=val('qtyUnit');
   const grams=qty*UNIT_G[unit];
   const f=grams/100, {name,n}=pending;
-  await sb.from('meals').insert({user_id:user.id,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
+  const date=val('mealDate')||new Date().toISOString().slice(0,10);
+  await sb.from('meals').insert({user_id:user.id,date,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
     p:Math.round((n.proteins_100g||0)*f), c:Math.round((n.carbohydrates_100g||0)*f),
     f:Math.round((n.fat_100g||0)*f), kcal:Math.round((n['energy-kcal_100g']||0)*f)});
   document.getElementById('foodSearch').value='';
@@ -161,20 +430,204 @@ async function confirmAdd(){
   pending=null;
   loadToday();
 }
+async function deleteMeal(id){
+  await sb.from('meals').delete().eq('id',id);
+  loadToday();
+}
+async function editMeal(id,desc,p,c,f,kcal){
+  const nd=prompt('Description :',desc); if(nd===null) return;
+  const np=+prompt('Protéines (g) :',p); const nc=+prompt('Glucides (g) :',c);
+  const nf=+prompt('Lipides (g) :',f); const nk=+prompt('Calories :',kcal);
+  await sb.from('meals').update({description:nd,p:np,c:nc,f:nf,kcal:nk}).eq('id',id);
+  loadToday();
+}
 
 async function loadToday(){
-  const today=new Date().toISOString().slice(0,10);
-  const {data:meals}=await sb.from('meals').select('*').eq('user_id',user.id).eq('date',today).order('created_at');
-  const tot=(meals||[]).reduce((a,m)=>({p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal}),{p:0,c:0,f:0,k:0});
-  document.getElementById('todayStats').innerHTML=`
-    <div class="stat">Kcal<b>${tot.k}</b>/${profile.kcal_target}</div>
-    <div class="stat">Prot<b>${tot.p}</b>/${profile.protein_target}g</div>
-    <div class="stat">Gluc<b>${tot.c}</b>/${profile.carb_target}g</div>
-    <div class="stat">Lip<b>${tot.f}</b>/${profile.fat_target}g</div>`;
-  document.getElementById('mealList').innerHTML=(meals||[]).map(m=>
-    `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal</div>`
-  ).join('') || '<span style="color:var(--muted)">Aucun repas aujourd\'hui</span>';
+  const {data:meals}=await sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at');
+  renderNutriDays(meals||[]);
+}
+
+function zones(w){
+  return {
+    kcal:{target:profile.kcal_target, gmin:profile.kcal_target*0.93, gmax:profile.kcal_target*1.06, ymin:profile.kcal_target*0.84, ymax:profile.kcal_target*1.17},
+    p:{min:w*1.4, target:w*1.8, ringMax:w*1.8*1.4},
+    c:{min:w*1, tmin:w*2, tmax:w*4, max:w*5},
+    f:{min:w*0.5, tmin:w*0.8, tmax:w*1.2, max:w*1.5}
+  };
+}
+function colorClass(val,zone,type){
+  if(type==='kcal') return (val>=zone.gmin&&val<=zone.gmax)?'g':(val>=zone.ymin&&val<=zone.ymax)?'y':'r';
+  if(type==='p') return val>=zone.target?'g':val>=zone.min?'y':'r';
+  return (val>=zone.tmin&&val<=zone.tmax)?'g':(val>=zone.min&&val<=zone.max)?'y':'r';
+}
+function ring(val,ringMax,cls,target,danger,unit){
+  const r=26,c=2*Math.PI*r,pct=Math.max(0,Math.min(100,val/ringMax*100)),off=c-(pct/100)*c;
+  const fc=danger?'d':cls;
+  return `<div><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="${r}"></circle><circle class="ringFill ${fc}" cx="32" cy="32" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"></circle></svg><div class="ringCenter${danger?' dg':''}">${Math.round(val)}${unit}</div></div><div class="ringTarget">/${Math.round(target)}${unit}</div></div>`;
+}
+function renderNutriDays(meals){
+  const z=zones(profile.weight_kg);
+  const grouped={};
+  meals.forEach(m=>{ (grouped[m.date]=grouped[m.date]||[]).push(m); });
+  const dates=Object.keys(grouped).sort().reverse();
+  document.getElementById('nutriDays').innerHTML = dates.length ? dates.map(d=>{
+    const items=grouped[d];
+    const tot=items.reduce((a,m)=>({p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal}),{p:0,c:0,f:0,k:0});
+    return `<div class="dayCard">
+      <div class="dayHead">${d}</div>
+      ${items.map(m=>`<div class="mealRow">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal
+        <a href="#" onclick='editMeal("${m.id}",${JSON.stringify(m.description)},${m.p},${m.c},${m.f},${m.kcal});return false' style="color:var(--brass);margin-left:6px">modifier</a>
+        <a href="#" onclick="deleteMeal('${m.id}');return false" style="color:#ef4444;margin-left:6px">supprimer</a>
+      </div>`).join('')}
+      <div class="ringGrid">
+        <div>${ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'')}<div class="ringLabel">Kcal</div></div>
+        <div>${ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g')}<div class="ringLabel">Prot</div></div>
+        <div>${ring(tot.c,z.c.max,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g')}<div class="ringLabel">Gluc</div></div>
+        <div>${ring(tot.f,z.f.max,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g')}<div class="ringLabel">Lip</div></div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="card"><span style="color:var(--muted)">Aucun repas noté</span></div>';
 }
 
 boot();
+
+let allExercises=[], myProgram=[], mySessions=[];
+function showTab(t){
+  document.getElementById('tabNutri').classList.toggle('active',t==='nutri');
+  document.getElementById('tabProg').classList.toggle('active',t==='prog');
+  document.getElementById('tabSuivi').classList.toggle('active',t==='suivi');
+  document.getElementById('nutriPane').classList.toggle('hide',t!=='nutri');
+  document.getElementById('progPane').classList.toggle('hide',t!=='prog');
+  document.getElementById('suiviPane').classList.toggle('hide',t!=='suivi');
+  document.getElementById('profilPane').classList.toggle('hide',t!=='profil');
+  if(t==='prog' && !allExercises.length) loadProgramTab();
+  if(t==='suivi') loadSuiviTab();
+  if(t==='profil') loadProfilTab();
+}
+async function loadProgramTab(){
+  const {data:ex}=await sb.from('exercises').select('*').order('muscle_group');
+  allExercises=ex||[];
+  const {data:ss}=await sb.from('sessions').select('*').eq('user_id',user.id).order('order_index');
+  mySessions=ss||[];
+  const {data:pe}=await sb.from('program_exercises').select('*, exercises(*)').eq('user_id',user.id).order('order_index');
+  myProgram=pe||[];
+  renderLibrary(); renderMyProgram();
+}
+async function createSession(){
+  const name=val('newSessionName').trim();
+  if(!name) return;
+  await sb.from('sessions').insert({user_id:user.id,name,order_index:mySessions.length});
+  document.getElementById('newSessionName').value='';
+  loadProgramTab();
+}
+function toggleCreate(){
+  document.getElementById('createZone').classList.toggle('hide');
+}
+function toggleSession(id){
+  const el=document.getElementById('exos_'+id);
+  el.classList.toggle('hide');
+}
+function toggleInfo(peId){
+  document.getElementById('info_'+peId).classList.toggle('hide');
+}
+async function deleteSession(id){
+  if(!confirm('Supprimer cette séance et ses exercices ?')) return;
+  await sb.from('program_exercises').delete().eq('session_id',id);
+  await sb.from('sessions').delete().eq('id',id);
+  loadProgramTab();
+}
+function renderLibrary(){
+  const q=(val('exoSearch')||'').toLowerCase();
+  const opts=mySessions.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('library').innerHTML=allExercises
+    .filter(e=>!q || (e.muscle_group||'').toLowerCase().includes(q) || e.name.toLowerCase().includes(q))
+    .map(e=>`<div class="exoCard"><b>${e.name}</b> <span style="color:var(--muted)">(${e.muscle_group||''})</span><br>${e.description||''}<br><i style="color:var(--muted)">${e.tips||''}</i><br><a href="${e.demo_url||'#'}" target="_blank">Voir la démo</a><br>
+      ${mySessions.length ? `<select id="sel_${e.id}" style="width:auto;display:inline;margin:4px 4px 0 0">${opts}</select><input id="sr_${e.id}" placeholder="4x10-12" style="width:auto;display:inline;margin:4px 4px 0 0"><button style="width:auto;display:inline;padding:4px 8px" onclick="addToProgram('${e.id}')">Ajouter</button>` : '<i style="color:var(--muted)">Crée une séance d\'abord</i>'}
+    </div>`).join('');
+}
+async function addToProgram(exoId){
+  const sessionId=val('sel_'+exoId);
+  const sr=val('sr_'+exoId)||'3x12';
+  await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exoId,session_id:sessionId,sets_reps:sr,order_index:myProgram.length});
+  loadProgramTab();
+}
+async function removeFromProgram(id){
+  await sb.from('program_exercises').delete().eq('id',id);
+  loadProgramTab();
+}
+async function renameSession(id,oldName){
+  const newName=prompt('Renommer la séance :',oldName);
+  if(!newName || newName===oldName) return;
+  await sb.from('sessions').update({name:newName}).eq('id',id);
+  loadProgramTab();
+}
+function renderMyProgram(){
+  if(!mySessions.length){ document.getElementById('myProgram').innerHTML='<span style="color:var(--muted)">Crée ta première séance ci-dessus</span>'; return; }
+  document.getElementById('myProgram').innerHTML=mySessions.map(s=>{
+    const exos=myProgram.filter(pe=>pe.session_id===s.id);
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+      <span style="cursor:pointer" onclick="toggleSession('${s.id}')">▸ <b>${s.name}</b> <span style="color:var(--muted);font-size:12px">(${exos.length})</span></span>
+      <a href="#" onclick="renameSession('${s.id}','${s.name}');return false" style="font-size:11px;color:var(--brass);margin-left:8px">renommer</a>
+      <a href="#" onclick="deleteSession('${s.id}');return false" style="font-size:11px;color:#ef4444;float:right">supprimer</a>
+      <div id="exos_${s.id}" class="hide">
+        ${exos.length ? exos.map(pe=>`<div class="exoCard"><b>${pe.exercises.name}</b> — ${pe.sets_reps}
+          <a href="#" onclick="toggleInfo('${pe.id}');return false" style="color:var(--brass);margin-left:6px">info</a>
+          <a href="#" onclick="removeFromProgram('${pe.id}');return false" style="float:right;color:#ef4444">Retirer</a>
+          <div id="info_${pe.id}" class="hide" style="margin-top:6px;font-size:12px;color:var(--muted)">
+            ${pe.exercises.description||''}<br><i>${pe.exercises.tips||''}</i><br>
+            <a href="${pe.exercises.demo_url||'#'}" target="_blank">Voir la démo</a>
+          </div>
+        </div>`).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px 0">Vide</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let progChart=null, myProgExos=[];
+async function loadSuiviTab(){
+  if(!allExercises.length){
+    const {data:ex}=await sb.from('exercises').select('*');
+    allExercises=ex||[];
+  }
+  if(!myProgram.length){
+    const {data:pe}=await sb.from('program_exercises').select('*, exercises(*)').eq('user_id',user.id);
+    myProgram=pe||[];
+  }
+  myProgExos=[...new Map(myProgram.map(pe=>[pe.exercise_id,pe.exercises])).values()];
+  const sel=document.getElementById('logExo');
+  sel.innerHTML=myProgExos.length ? myProgExos.map(e=>`<option value="${e.id}">${e.name}</option>`).join('') : '<option>Ajoute d\'abord un exercice à ton programme</option>';
+  if(myProgExos.length) onLogExoChange();
+}
+async function onLogExoChange(){
+  const exoId=val('logExo');
+  if(!exoId) return;
+  const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',exoId).order('date');
+  const last=logs && logs.length ? logs[logs.length-1] : null;
+  document.getElementById('lastWeight').textContent=last ? `Dernier : ${last.weight}kg x${last.sets} le ${last.date}` : 'Aucun historique';
+  drawChart(logs||[]);
+  renderLogHistory(logs||[]);
+}
+function drawChart(logs){
+  const ctx=document.getElementById('progChart');
+  if(progChart) progChart.destroy();
+  progChart=new Chart(ctx,{type:'line',data:{
+    labels:logs.map(l=>l.date),
+    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#C9A227',backgroundColor:'rgba(201,162,39,.15)',tension:.2,fill:true}]
+  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+async function addLog(){
+  const exoId=val('logExo');
+  if(!exoId) return;
+  await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
+    weight:+val('logWeight')||0, sets:+val('logSets')||0, reps:val('logReps')});
+  document.getElementById('logWeight').value='';
+  document.getElementById('logSets').value='';
+  document.getElementById('logReps').value='';
+  onLogExoChange();
+}
+function renderLogHistory(logs){
+  document.getElementById('logHistory').innerHTML=logs.length ? [...logs].reverse().map(l=>
+    `<div class="exoCard">${l.date} — ${l.weight}kg x${l.sets} (${l.reps||''})</div>`
+  ).join('') : '<span style="color:var(--muted)">Aucun historique pour cet exercice</span>';
+}
 </script></body></html>
