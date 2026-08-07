@@ -4,44 +4,131 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#2b2c2e;--surf:#343537;--surf2:#3b3c3e;--line:#48494c;--text:#EDEBE6;--muted:#a7a5a0;--brass:#C9A227}
+:root{--bg:#2b2c2e;--surf:#343537;--surf2:#3b3c3e;--line:#48494c;--text:#EDEBE6;--muted:#a7a5a0;--brass:#D4A017;--gold-hi:#D4A017;--gold:#D4A017;--gold-deep:#D4A017}
 *{box-sizing:border-box}body{margin:0;background:#2b2c2e url('bg.jpg') center center / cover no-repeat fixed;color:var(--text);font-family:-apple-system,Inter,sans-serif;position:relative}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:rgba(20,20,20,.45)}
-.wrap{max-width:960px;margin:0 auto;padding:20px 16px;position:relative;z-index:1}
-h1{font-size:20px;text-transform:uppercase;letter-spacing:.05em}
-input,select,button{width:100%;padding:10px;margin:6px 0;background:var(--surf2);border:1px solid var(--line);color:var(--text);border-radius:8px;font-size:14px}
-button{background:var(--brass);color:#000;font-weight:700;cursor:pointer;border:none}
-.card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:rgba(15,15,16,.32)}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1}
+h1{font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+input,select{
+  width:100%;padding:13px 16px;margin:6px 0;background:rgba(18,19,20,.88);border:none;
+  color:var(--text);border-radius:16px;font-size:14.5px;color-scheme:dark;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 1px 0 rgba(255,255,255,.045),
+    inset 0 3px 7px rgba(0,0,0,.6),
+    inset 0 1px 2px rgba(0,0,0,.75),
+    inset 1px 0 2px rgba(0,0,0,.3),
+    inset 0 -1px 0 rgba(255,255,255,.04);
+}
+input[type="date"]{font-family:ui-monospace,Consolas,'Courier New',monospace;letter-spacing:.1em}
+input:focus,select:focus{outline:2px solid var(--gold);outline-offset:-1px}
+input::placeholder{color:#8b8985}
+button{
+  width:100%;padding:12px;margin:6px 0;font-size:14px;font-weight:700;cursor:pointer;border:none;border-radius:12px;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-deep));color:#1a1408;
+  box-shadow:0 4px 10px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -2px 3px rgba(0,0,0,.22);
+}
+button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transform:translateY(1px)}
+.card{
+  background-color:rgba(33,34,35,.85);
+  background-image:
+    linear-gradient(180deg,rgba(0,0,0,.30) 0%,rgba(0,0,0,0) 22%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size:auto,140px 140px;
+  background-blend-mode:normal,overlay;
+  border:none;border-radius:24px;
+  padding:22px 26px;margin-bottom:24px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.055),
+    0 2px 1px -1px rgba(255,255,255,.09),
+    inset 0 12px 20px -8px rgba(0,0,0,.8),
+    inset 0 2px 3px rgba(0,0,0,.7),
+    inset 10px 0 16px -12px rgba(0,0,0,.6),
+    inset -10px 0 16px -12px rgba(0,0,0,.6),
+    inset 0 0 26px rgba(0,0,0,.32),
+    inset 0 -1px 0 rgba(255,255,255,.06);
+}
 .hide{display:none}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.stat{background:var(--surf2);border-radius:8px;padding:8px;text-align:center;font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.stat{background:rgba(12,12,13,.5);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 8px;text-align:center;font-size:11px}
 .stat b{display:block;font-size:16px}
-#results div{padding:6px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+#results div{padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:13px}
+#results div:hover{color:var(--gold-hi)}
 .qtyRow{display:flex;gap:6px}
 .qtyRow input{flex:2}.qtyRow select{flex:1}
-.tabs{display:flex;gap:4px;margin-bottom:12px}
-.tabs button{background:var(--surf2);color:var(--text);font-weight:400}
-.tabs button.active{background:var(--brass);color:#000;font-weight:700}
-.exoCard{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.tabs{
+  display:flex;gap:8px;margin-bottom:24px;padding:7px;border-radius:18px;
+  background-color:rgba(24,25,26,.85);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size:140px 140px;background-blend-mode:overlay;
+  border:none;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.055),
+    0 2px 1px -1px rgba(255,255,255,.09),
+    inset 0 4px 10px rgba(0,0,0,.7),
+    inset 0 1px 2px rgba(0,0,0,.85),
+    inset 2px 0 6px rgba(0,0,0,.4),
+    inset 0 -1px 0 rgba(255,255,255,.05);
+}
+.tabs button{
+  background:rgba(30,31,32,.55);color:#d6d3cd;font-weight:600;margin:0;border-radius:12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.tabs button.active{
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-deep));color:#1a1408;font-weight:700;
+  box-shadow:0 5px 10px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 3px rgba(0,0,0,.2);
+}
+.exoCard{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
 .exoCard a{color:var(--brass)}
 .headerRow{display:flex;align-items:center;justify-content:space-between;max-width:960px;margin:0 auto 8px}
-.avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid var(--brass);cursor:pointer;flex-shrink:0;background:var(--surf2)}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.dayCard{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
-.dayHead{font-size:12px;color:var(--brass);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.mealRow{padding:6px 0;border-top:1px solid var(--line);font-size:12.5px}
-.mealRow:first-child{border-top:none}
-.ringGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.ringWrap{position:relative;width:60px;height:60px;margin:4px auto 0}
-.ringWrap svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ringTrack{fill:none;stroke:var(--line);stroke-width:6}
-.ringFill{fill:none;stroke-width:6;stroke-linecap:round}
+.avatar{
+  position:relative;width:64px;height:64px;border-radius:50%;overflow:hidden;cursor:pointer;flex-shrink:0;
+  background:rgba(10,10,11,.5);
+}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar::after{
+  content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.5), inset 0 -1px 1px rgba(255,255,255,.08);
+}
+.dayCard{
+  background-color:rgba(33,34,35,.85);
+  background-image:
+    linear-gradient(180deg,rgba(0,0,0,.30) 0%,rgba(0,0,0,0) 22%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size:auto,140px 140px;
+  background-blend-mode:normal,overlay;
+  border:none;border-radius:24px;
+  padding:22px 26px;margin-bottom:24px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.055),
+    0 2px 1px -1px rgba(255,255,255,.09),
+    inset 0 12px 20px -8px rgba(0,0,0,.8),
+    inset 0 2px 3px rgba(0,0,0,.7),
+    inset 10px 0 16px -12px rgba(0,0,0,.6),
+    inset -10px 0 16px -12px rgba(0,0,0,.6),
+    inset 0 0 26px rgba(0,0,0,.32),
+    inset 0 -1px 0 rgba(255,255,255,.06);
+}
+.dayHead{font-size:13px;color:var(--brass);letter-spacing:.03em;margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.mealRow{padding:8px 0;font-size:14px}
+.iconLink{text-decoration:none;margin-left:9px;display:inline-flex;align-items:center;vertical-align:middle;opacity:.8}
+.iconLink:hover{opacity:1}
+.ringGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px}
+.ringWrap{
+  position:relative;width:72px;height:72px;margin:0 auto;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%, rgba(30,30,32,.7), rgba(10,10,11,.7));
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.6), inset 0 -1px 1px rgba(255,255,255,.04), 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(255,255,255,.04);
+}
+.ringWrap svg{width:100%;height:100%;transform:rotate(-90deg);padding:4px}
+.ringTrack{fill:none;stroke:#454548;stroke-width:7}
+.ringFill{fill:none;stroke-width:7;stroke-linecap:round}
 .ringFill.g{stroke:#22c55e}.ringFill.y{stroke:#f59e0b}.ringFill.r{stroke:#ef4444}.ringFill.d{stroke:#050505}
-.ringCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.ringCenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700}
 .ringCenter span{color:#ef4444}
 .ringCenter.dg{color:#ef4444}
-.ringTarget{font-size:8px;color:var(--muted);margin-top:2px}
-.ringLabel{font-size:9px;text-transform:uppercase;color:var(--muted);text-align:center}
+.ringCol{text-align:center}
+.ringLabel{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b6b3ad;text-align:center;margin-top:9px}
+.ringTarget{font-size:10.5px;color:#8b8985;margin-top:3px;text-align:center}
 </style></head><body>
 <div class="wrap">
 <div class="headerRow">
@@ -347,7 +434,7 @@ function drawWeightChart(logs){
   if(weightChart) weightChart.destroy();
   weightChart=new Chart(ctx,{type:'line',data:{
     labels:logs.map(l=>l.date),
-    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#C9A227',backgroundColor:'rgba(201,162,39,.15)',tension:.2,fill:true}]
+    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
 async function logWeight(){
@@ -462,10 +549,10 @@ function colorClass(val,zone,type){
   if(type==='p') return val>=zone.target?'g':val>=zone.min?'y':'r';
   return (val>=zone.tmin&&val<=zone.tmax)?'g':(val>=zone.min&&val<=zone.max)?'y':'r';
 }
-function ring(val,ringMax,cls,target,danger,unit){
+function ring(val,ringMax,cls,target,danger,unit,label){
   const r=26,c=2*Math.PI*r,pct=Math.max(0,Math.min(100,val/ringMax*100)),off=c-(pct/100)*c;
   const fc=danger?'d':cls;
-  return `<div><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="${r}"></circle><circle class="ringFill ${fc}" cx="32" cy="32" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"></circle></svg><div class="ringCenter${danger?' dg':''}">${Math.round(val)}${unit}</div></div><div class="ringTarget">/${Math.round(target)}${unit}</div></div>`;
+  return `<div class="ringCol"><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="${r}"></circle><circle class="ringFill ${fc}" cx="32" cy="32" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"></circle></svg><div class="ringCenter${danger?' dg':''}">${Math.round(val)}${unit}</div></div><div class="ringLabel">${label}</div><div class="ringTarget">/${Math.round(target)}${unit}</div></div>`;
 }
 function renderNutriDays(meals){
   const z=zones(profile.weight_kg);
@@ -478,14 +565,14 @@ function renderNutriDays(meals){
     return `<div class="dayCard">
       <div class="dayHead">${d}</div>
       ${items.map(m=>`<div class="mealRow">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal
-        <a href="#" onclick='editMeal("${m.id}",${JSON.stringify(m.description)},${m.p},${m.c},${m.f},${m.kcal});return false' style="color:var(--brass);margin-left:6px">modifier</a>
-        <a href="#" onclick="deleteMeal('${m.id}');return false" style="color:#ef4444;margin-left:6px">supprimer</a>
+        <a href="#" onclick='editMeal("${m.id}",${JSON.stringify(m.description)},${m.p},${m.c},${m.f},${m.kcal});return false' class="iconLink" style="color:var(--brass)" title="Modifier"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></a>
+        <a href="#" onclick="deleteMeal('${m.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></a>
       </div>`).join('')}
       <div class="ringGrid">
-        <div>${ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'')}<div class="ringLabel">Kcal</div></div>
-        <div>${ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g')}<div class="ringLabel">Prot</div></div>
-        <div>${ring(tot.c,z.c.max,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g')}<div class="ringLabel">Gluc</div></div>
-        <div>${ring(tot.f,z.f.max,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g')}<div class="ringLabel">Lip</div></div>
+        ${ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal')}
+        ${ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot')}
+        ${ring(tot.c,z.c.max,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')}
+        ${ring(tot.f,z.f.max,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')}
       </div>
     </div>`;
   }).join('') : '<div class="card"><span style="color:var(--muted)">Aucun repas noté</span></div>';
@@ -614,7 +701,7 @@ function drawChart(logs){
   if(progChart) progChart.destroy();
   progChart=new Chart(ctx,{type:'line',data:{
     labels:logs.map(l=>l.date),
-    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#C9A227',backgroundColor:'rgba(201,162,39,.15)',tension:.2,fill:true}]
+    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
 async function addLog(){
