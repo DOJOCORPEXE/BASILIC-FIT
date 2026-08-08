@@ -191,6 +191,35 @@ button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transform:translateY(1p
     <input id="mealDate" type="date">
     <input id="foodSearch" placeholder="Chercher un aliment...">
     <div id="results"></div>
+    <div style="margin-top:8px">
+      <a href="#" onclick="toggleCustomFood();return false" style="color:var(--brass);font-size:13px;text-decoration:underline">Ce n'est pas dans la liste ?</a>
+    </div>
+  </div>
+
+  <div id="customFoodBox" class="card hide">
+    <div style="margin-bottom:4px;font-size:13px"><b>Ajouter un aliment personnalisé</b></div>
+    <input id="cfName" placeholder="Nom (ex: Riz au poulet maison)">
+    <label style="font-size:11px;color:var(--muted)">Comment tu rentres les valeurs ?</label>
+    <select id="cfMode" onchange="updateCustomFoodMode()">
+      <option value="100g">Macros pour 100g, puis je précise la quantité mangée</option>
+      <option value="exact">Macros de la portion exacte que j'ai mangée</option>
+    </select>
+    <div class="row3" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+      <div><label style="font-size:10px;color:var(--muted)">Kcal</label><input id="cfKcal" type="number"></div>
+      <div><label style="font-size:10px;color:var(--muted)">Prot (g)</label><input id="cfP" type="number"></div>
+      <div><label style="font-size:10px;color:var(--muted)">Gluc (g)</label><input id="cfC" type="number"></div>
+      <div><label style="font-size:10px;color:var(--muted)">Lip (g)</label><input id="cfF" type="number"></div>
+    </div>
+    <div id="cfQtyRow" class="qtyRow">
+      <input id="cfQty" type="number" placeholder="Quantité mangée" value="100">
+      <select id="cfQtyUnit">
+        <option value="g">grammes</option>
+        <option value="cas">CAS (15g)</option>
+        <option value="cac">CAC (5g)</option>
+        <option value="poignee">Poignée (25g)</option>
+      </select>
+    </div>
+    <button onclick="confirmCustomFood()">Ajouter</button>
   </div>
 
   <div id="qtyBox" class="card hide">
@@ -321,6 +350,14 @@ async function login(){
   boot();
 }
 function val(id){return document.getElementById(id).value;}
+function checkErr(error, context){
+  if(error){
+    alert('Erreur Supabase ('+context+') : '+error.message);
+    console.error(context, error);
+    return true;
+  }
+  return false;
+}
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
@@ -366,7 +403,8 @@ async function saveProfile(){
     intensity:val('intensity'), goal:val('goal'), aggressiveness:val('aggressiveness')
   };
   const t=computeTargets(prof);
-  await sb.from('profiles').upsert({id:user.id,...prof,...t,last_adjust_date:new Date().toISOString().slice(0,10)});
+  const {error}=await sb.from('profiles').upsert({id:user.id,...prof,...t,last_adjust_date:new Date().toISOString().slice(0,10)});
+  if(checkErr(error,'création profil')) return;
   profile={...prof,...t};
   document.getElementById('profileSetup').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
@@ -376,7 +414,8 @@ async function saveProfile(){
 async function changeGoal(goal){
   profile.goal=goal;
   const t=computeTargets(profile);
-  await sb.from('profiles').update({goal,...t}).eq('id',user.id);
+  const {error}=await sb.from('profiles').update({goal,...t}).eq('id',user.id);
+  if(checkErr(error,'changement objectif')) return;
   profile={...profile,...t};
   loadToday();
 }
@@ -410,7 +449,8 @@ async function uploadAvatar(file){
   const size=Math.min(img.width,img.height);
   ctx.drawImage(img,(img.width-size)/2,(img.height-size)/2,size,size,0,0,160,160);
   const dataUrl=canvas.toDataURL('image/jpeg',0.7);
-  await sb.from('profiles').update({avatar_url:dataUrl}).eq('id',user.id);
+  const {error}=await sb.from('profiles').update({avatar_url:dataUrl}).eq('id',user.id);
+  if(checkErr(error,'upload photo de profil')) return;
   profile.avatar_url=dataUrl;
   document.getElementById('avatarImg').src=dataUrl;
 }
@@ -422,7 +462,17 @@ async function updateProfile(){
     intensity:val('pIntensity'), goal:val('pGoal'), aggressiveness:val('pAggressiveness')
   };
   const t=computeTargets(prof);
-  await sb.from('profiles').update({...prof,...t}).eq('id',user.id);
+  const {data,error}=await sb.from('profiles').update({...prof,...t}).eq('id',user.id).select();
+  if(error){
+    alert('Erreur de sauvegarde : '+error.message);
+    console.error('updateProfile error:', error);
+    return;
+  }
+  if(!data || data.length===0){
+    alert('Aucune ligne mise à jour — la policy RLS "UPDATE" sur la table profiles bloque probablement l\'écriture. Vérifie dans Supabase (Authentication > Policies > profiles) qu\'une policy autorise UPDATE avec auth.uid() = id, en using ET en with check.');
+    console.error('updateProfile: 0 rows affected — RLS blocking update likely.');
+    return;
+  }
   profile={...profile,...prof,...t};
   loadProfilTab();
   loadToday();
@@ -440,7 +490,8 @@ function drawWeightChart(logs){
 async function logWeight(){
   const w=+val('weightLogVal');
   if(!w) return;
-  await sb.from('weight_logs').insert({user_id:user.id,weight:w});
+  const {error}=await sb.from('weight_logs').insert({user_id:user.id,weight:w});
+  if(checkErr(error,'ajout poids')) return;
   document.getElementById('weightLogVal').value='';
   await checkAutoAdjust();
   loadProfilTab();
@@ -464,12 +515,14 @@ async function checkAutoAdjust(){
   if(adjustPct!==0){
     const newKcal=Math.round(profile.kcal_target*(1+adjustPct));
     const carbT=Math.max(0,Math.round((newKcal-profile.protein_target*4-profile.fat_target*9)/4));
-    await sb.from('profiles').update({kcal_target:newKcal,carb_target:carbT,last_adjust_date:last.date}).eq('id',user.id);
+    const {error}=await sb.from('profiles').update({kcal_target:newKcal,carb_target:carbT,last_adjust_date:last.date}).eq('id',user.id);
+    if(checkErr(error,'ajustement auto calories')) return;
     profile.kcal_target=newKcal; profile.carb_target=carbT; profile.last_adjust_date=last.date;
     alert(`Cible calorique ajustée automatiquement à ${newKcal} kcal (progression réelle : ${actualRateWeek.toFixed(2)}kg/sem).`);
     loadToday();
   } else {
-    await sb.from('profiles').update({last_adjust_date:last.date}).eq('id',user.id);
+    const {error}=await sb.from('profiles').update({last_adjust_date:last.date}).eq('id',user.id);
+    if(checkErr(error,'mise à jour date ajustement')) return;
     profile.last_adjust_date=last.date;
   }
 }
@@ -482,10 +535,22 @@ document.getElementById('foodSearch').addEventListener('input',e=>{
   searchTimeout=setTimeout(()=>searchFood(q),400);
 });
 async function searchFood(q){
-  const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=8&fields=product_name,nutriments`);
-  const data=await r.json();
   const box=document.getElementById('results');
   box.innerHTML='';
+
+  // 1. Aliments génériques (table locale food_items) — prioritaires car fiables
+  const {data:local}=await sb.from('food_items').select('*').ilike('name', `%${q}%`).limit(8);
+  (local||[]).forEach(f=>{
+    const n={'energy-kcal_100g':f.kcal_100g,'proteins_100g':f.protein_100g,'carbohydrates_100g':f.carbs_100g,'fat_100g':f.fat_100g};
+    const div=document.createElement('div');
+    div.textContent=`${f.name} — ${Math.round(f.kcal_100g)}kcal/100g · générique`;
+    div.onclick=()=>openQtyBox(f.name,n);
+    box.appendChild(div);
+  });
+
+  // 2. OpenFoodFacts (produits de marque), en complément — trié par popularité
+  const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=8&sort_by=unique_scans_n&fields=product_name,nutriments`);
+  const data=await r.json();
   (data.products||[]).forEach(p=>{
     if(!p.product_name || !p.nutriments) return;
     const n=p.nutriments;
@@ -510,9 +575,10 @@ async function confirmAdd(){
   const grams=qty*UNIT_G[unit];
   const f=grams/100, {name,n}=pending;
   const date=val('mealDate')||new Date().toISOString().slice(0,10);
-  await sb.from('meals').insert({user_id:user.id,date,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
+  const {error}=await sb.from('meals').insert({user_id:user.id,date,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
     p:Math.round((n.proteins_100g||0)*f), c:Math.round((n.carbohydrates_100g||0)*f),
     f:Math.round((n.fat_100g||0)*f), kcal:Math.round((n['energy-kcal_100g']||0)*f)});
+  if(checkErr(error,'ajout repas')) return;
   document.getElementById('foodSearch').value='';
   document.getElementById('results').innerHTML='';
   document.getElementById('qtyBox').classList.add('hide');
@@ -520,14 +586,52 @@ async function confirmAdd(){
   loadToday();
 }
 async function deleteMeal(id){
-  await sb.from('meals').delete().eq('id',id);
+  const {error}=await sb.from('meals').delete().eq('id',id);
+  if(checkErr(error,'suppression repas')) return;
+  loadToday();
+}
+
+function toggleCustomFood(){
+  document.getElementById('customFoodBox').classList.toggle('hide');
+  updateCustomFoodMode();
+}
+function updateCustomFoodMode(){
+  const per100 = val('cfMode')==='100g';
+  document.getElementById('cfQtyRow').style.display = per100 ? 'flex' : 'none';
+}
+async function confirmCustomFood(){
+  const name=val('cfName').trim();
+  if(!name) return alert('Donne un nom à l\'aliment avant d\'ajouter.');
+  const kcalIn=+val('cfKcal')||0, pIn=+val('cfP')||0, cIn=+val('cfC')||0, fIn=+val('cfF')||0;
+  let finalKcal, finalP, finalC, finalF, desc;
+  if(val('cfMode')==='100g'){
+    const qty=+val('cfQty')||0, unit=val('cfQtyUnit');
+    const grams=qty*UNIT_G[unit];
+    const ratio=grams/100;
+    finalKcal=Math.round(kcalIn*ratio); finalP=Math.round(pIn*ratio); finalC=Math.round(cIn*ratio); finalF=Math.round(fIn*ratio);
+    desc=`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`;
+  } else {
+    finalKcal=Math.round(kcalIn); finalP=Math.round(pIn); finalC=Math.round(cIn); finalF=Math.round(fIn);
+    desc=name;
+  }
+  const date=val('mealDate')||new Date().toISOString().slice(0,10);
+  const {error}=await sb.from('meals').insert({user_id:user.id,date,description:desc,p:finalP,c:finalC,f:finalF,kcal:finalKcal});
+  if(checkErr(error,'ajout aliment personnalisé')) return;
+  document.getElementById('cfName').value='';
+  document.getElementById('cfKcal').value='';
+  document.getElementById('cfP').value='';
+  document.getElementById('cfC').value='';
+  document.getElementById('cfF').value='';
+  document.getElementById('cfQty').value='100';
+  document.getElementById('customFoodBox').classList.add('hide');
   loadToday();
 }
 async function editMeal(id,desc,p,c,f,kcal){
   const nd=prompt('Description :',desc); if(nd===null) return;
   const np=+prompt('Protéines (g) :',p); const nc=+prompt('Glucides (g) :',c);
   const nf=+prompt('Lipides (g) :',f); const nk=+prompt('Calories :',kcal);
-  await sb.from('meals').update({description:nd,p:np,c:nc,f:nf,kcal:nk}).eq('id',id);
+  const {error}=await sb.from('meals').update({description:nd,p:np,c:nc,f:nf,kcal:nk}).eq('id',id);
+  if(checkErr(error,'modification repas')) return;
   loadToday();
 }
 
@@ -549,6 +653,12 @@ function colorClass(val,zone,type){
   if(type==='p') return val>=zone.target?'g':val>=zone.min?'y':'r';
   return (val>=zone.tmin&&val<=zone.tmax)?'g':(val>=zone.min&&val<=zone.max)?'y':'r';
 }
+function formatDateFR(d){
+  const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const [y,m,day]=d.split('-');
+  const dateObj=new Date(+y,+m-1,+day);
+  return `${days[dateObj.getDay()]} ${day}/${m}/${y}`;
+}
 function ring(val,ringMax,cls,target,danger,unit,label){
   const r=26,c=2*Math.PI*r,pct=Math.max(0,Math.min(100,val/ringMax*100)),off=c-(pct/100)*c;
   const fc=danger?'d':cls;
@@ -563,7 +673,7 @@ function renderNutriDays(meals){
     const items=grouped[d];
     const tot=items.reduce((a,m)=>({p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal}),{p:0,c:0,f:0,k:0});
     return `<div class="dayCard">
-      <div class="dayHead">${d}</div>
+      <div class="dayHead">${formatDateFR(d)}</div>
       ${items.map(m=>`<div class="mealRow">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal
         <a href="#" onclick='editMeal("${m.id}",${JSON.stringify(m.description)},${m.p},${m.c},${m.f},${m.kcal});return false' class="iconLink" style="color:var(--brass)" title="Modifier"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></a>
         <a href="#" onclick="deleteMeal('${m.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></a>
@@ -605,7 +715,8 @@ async function loadProgramTab(){
 async function createSession(){
   const name=val('newSessionName').trim();
   if(!name) return;
-  await sb.from('sessions').insert({user_id:user.id,name,order_index:mySessions.length});
+  const {error}=await sb.from('sessions').insert({user_id:user.id,name,order_index:mySessions.length});
+  if(checkErr(error,'création séance')) return;
   document.getElementById('newSessionName').value='';
   loadProgramTab();
 }
@@ -621,8 +732,10 @@ function toggleInfo(peId){
 }
 async function deleteSession(id){
   if(!confirm('Supprimer cette séance et ses exercices ?')) return;
-  await sb.from('program_exercises').delete().eq('session_id',id);
-  await sb.from('sessions').delete().eq('id',id);
+  const {error:e1}=await sb.from('program_exercises').delete().eq('session_id',id);
+  if(checkErr(e1,'suppression exercices de la séance')) return;
+  const {error:e2}=await sb.from('sessions').delete().eq('id',id);
+  if(checkErr(e2,'suppression séance')) return;
   loadProgramTab();
 }
 function renderLibrary(){
@@ -637,17 +750,20 @@ function renderLibrary(){
 async function addToProgram(exoId){
   const sessionId=val('sel_'+exoId);
   const sr=val('sr_'+exoId)||'3x12';
-  await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exoId,session_id:sessionId,sets_reps:sr,order_index:myProgram.length});
+  const {error}=await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exoId,session_id:sessionId,sets_reps:sr,order_index:myProgram.length});
+  if(checkErr(error,'ajout exercice au programme')) return;
   loadProgramTab();
 }
 async function removeFromProgram(id){
-  await sb.from('program_exercises').delete().eq('id',id);
+  const {error}=await sb.from('program_exercises').delete().eq('id',id);
+  if(checkErr(error,'retrait exercice du programme')) return;
   loadProgramTab();
 }
 async function renameSession(id,oldName){
   const newName=prompt('Renommer la séance :',oldName);
   if(!newName || newName===oldName) return;
-  await sb.from('sessions').update({name:newName}).eq('id',id);
+  const {error}=await sb.from('sessions').update({name:newName}).eq('id',id);
+  if(checkErr(error,'renommage séance')) return;
   loadProgramTab();
 }
 function renderMyProgram(){
@@ -707,8 +823,9 @@ function drawChart(logs){
 async function addLog(){
   const exoId=val('logExo');
   if(!exoId) return;
-  await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
+  const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
     weight:+val('logWeight')||0, sets:+val('logSets')||0, reps:val('logReps')});
+  if(checkErr(error,'ajout résultat séance')) return;
   document.getElementById('logWeight').value='';
   document.getElementById('logSets').value='';
   document.getElementById('logReps').value='';
