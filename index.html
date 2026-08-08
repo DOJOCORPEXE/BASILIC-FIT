@@ -90,13 +90,23 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
 .exoCard a{color:var(--brass)}
 .headerRow{display:flex;align-items:center;justify-content:space-between;max-width:960px;margin:0 auto 8px}
 .avatar{
-  position:relative;width:64px;height:64px;border-radius:50%;overflow:hidden;cursor:pointer;flex-shrink:0;
+  position:relative;width:64px;height:64px;cursor:pointer;flex-shrink:0;
+}
+.avatarInner{
+  position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;
   background:rgba(10,10,11,.5);
 }
-.avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.avatar::after{
+.avatarInner img{width:100%;height:100%;object-fit:cover;display:block}
+.avatarInner::after{
   content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;
   box-shadow:inset 0 3px 6px rgba(0,0,0,.5), inset 0 -1px 1px rgba(255,255,255,.08);
+}
+.profileWarnBadge{
+  position:absolute;top:-3px;right:-3px;width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(180deg,#ffce3a,#e8a500);color:#241c04;font-weight:800;font-size:13px;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+  box-shadow:0 2px 5px rgba(0,0,0,.5), 0 0 0 2px #2b2c2e;
+  z-index:2;
 }
 .dayCard{
   background-color:rgba(33,34,35,.85);
@@ -141,7 +151,10 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
 <div class="wrap">
 <div class="headerRow">
   <h1>NO PAIN <span style="color:var(--brass)">NO GAIN</span></h1>
-  <div class="avatar hide" id="avatarBtn" onclick="showTab('profil')"><img id="avatarImg" src=""></div>
+  <div class="avatar hide" id="avatarBtn" onclick="showTab('profil')">
+    <div class="avatarInner"><img id="avatarImg" src=""></div>
+    <span id="profileWarnBadge" class="profileWarnBadge hide">!</span>
+  </div>
 </div>
 
 <div id="auth" class="card">
@@ -178,8 +191,8 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
     <option value="high">Intensité élevée</option>
   </select>
   <select id="goal">
+    <option value="maintien" selected>Maintien</option>
     <option value="seche">Sèche (perte de gras)</option>
-    <option value="maintien">Maintien</option>
     <option value="prise">Prise de masse</option>
   </select>
   <select id="aggressiveness">
@@ -336,16 +349,16 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       <button onclick="updateProfile()">Recalculer et sauvegarder</button>
     </div>
     <div class="card">
-      <b>Confidentialité</b>
-      <p style="font-size:12.5px;color:var(--muted);margin:8px 0;line-height:1.5">On stocke ton profil (poids, taille, âge, objectifs), tes repas et tes séances, uniquement pour faire fonctionner l'app. Rien n'est partagé ni revendu. Tu peux tout supprimer définitivement ci-dessous.</p>
-      <button class="danger" onclick="deleteAccount()">Supprimer mes données et mon compte</button>
-    </div>
-    <div class="card">
       <b>Suivi de la masse grasse</b>
       <div class="qtyRow">
         <input id="bodyfatLogVal" type="number" step="0.1" placeholder="% masse grasse aujourd'hui">
         <button style="flex:1" onclick="logBodyfat()">Noter</button>
       </div>
+      <div class="qtyRow">
+        <input id="targetBodyfatVal" type="number" step="0.1" placeholder="% masse grasse cible">
+        <button style="flex:1" onclick="saveTargetBodyfat()">Définir</button>
+      </div>
+      <div id="targetBodyfatInfo" style="font-size:12px;color:var(--muted);margin:2px 2px 12px"></div>
       <canvas id="bodyfatChart" height="160"></canvas>
       <div id="bodyfatLogList" style="margin-top:6px"></div>
     </div>
@@ -355,8 +368,18 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
         <input id="weightLogVal" type="number" placeholder="Poids aujourd'hui (kg)">
         <button style="flex:1" onclick="logWeight()">Noter</button>
       </div>
+      <div class="qtyRow">
+        <input id="targetWeightVal" type="number" placeholder="Poids cible (kg)">
+        <button style="flex:1" onclick="saveTargetWeight()">Définir</button>
+      </div>
+      <div id="targetWeightInfo" style="font-size:12px;color:var(--muted);margin:2px 2px 12px"></div>
       <canvas id="weightChart" height="160"></canvas>
       <div id="weightLogList" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <b>Confidentialité</b>
+      <p style="font-size:12.5px;color:var(--muted);margin:8px 0;line-height:1.5">On stocke ton profil (poids, taille, âge, objectifs), tes repas et tes séances, uniquement pour faire fonctionner l'app. Rien n'est partagé ni revendu. Tu peux tout supprimer définitivement ci-dessous.</p>
+      <button class="danger" onclick="deleteAccount()">Supprimer mes données et mon compte</button>
     </div>
   </div>
 </div>
@@ -477,8 +500,21 @@ async function boot(){
     document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
     document.getElementById('avatarBtn').classList.remove('hide');
     document.getElementById('avatarImg').src=p.avatar_url||'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%233b3c3e%27/%3E%3Ctext x=%2720%27 y=%2726%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27%23a7a5a0%27%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+    updateProfileWarnBadge();
     loadToday();
   }
+}
+// Le point d'exclamation jaune sur l'avatar signale qu'il manque des
+// infos essentielles au calcul des cibles (poids/taille/âge). Il disparaît
+// dès que ces champs sont correctement remplis — recalculé à chaque
+// chargement/sauvegarde de profil.
+function isProfileIncomplete(p){
+  return !p || !p.weight_kg || p.weight_kg<=0 || !p.height_cm || p.height_cm<=0 || !p.age || p.age<=0;
+}
+function updateProfileWarnBadge(){
+  const incomplete = isProfileIncomplete(profile);
+  const badge=document.getElementById('profileWarnBadge');
+  if(badge) badge.classList.toggle('hide', !incomplete);
 }
 
 function computeTargets(prof){
@@ -512,6 +548,9 @@ async function saveProfile(){
   profile={...prof,...t};
   document.getElementById('profileSetup').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
+  document.getElementById('avatarBtn').classList.remove('hide');
+  document.getElementById('avatarImg').src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%233b3c3e%27/%3E%3Ctext x=%2720%27 y=%2726%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27%23a7a5a0%27%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+  updateProfileWarnBadge();
   document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
   loadToday();
 }
@@ -538,9 +577,11 @@ async function loadProfilTab(){
   document.getElementById('targetSummary').innerHTML=`Maintenance ~${profile.maintenance} kcal<br>Cible : ${profile.kcal_target} kcal — P${profile.protein_target}g / G${profile.carb_target}g / L${profile.fat_target}g`;
   const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
   drawWeightChart(logs||[]);
+  updateTargetWeightInfo(logs||[]);
   renderWeightLogList(logs||[]);
   const {data:bfLogs}=await sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date');
   drawBodyfatChart(bfLogs||[]);
+  updateTargetBodyfatInfo(bfLogs||[]);
   renderBodyfatLogList(bfLogs||[]);
 }
 async function deleteAccount(){
@@ -596,6 +637,7 @@ async function updateProfile(){
     return;
   }
   profile={...profile,...prof,...t};
+  updateProfileWarnBadge();
   loadProfilTab();
   loadToday();
   alert('Profil mis à jour.');
@@ -604,19 +646,85 @@ let weightChart=null;
 function drawWeightChart(logs){
   const ctx=document.getElementById('weightChart');
   if(weightChart) weightChart.destroy();
+  const datasets=[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}];
+  if(profile.target_weight_kg && logs.length){
+    datasets.push({
+      label:'Objectif',
+      data:logs.map(()=>profile.target_weight_kg),
+      borderColor:'rgba(237,235,230,.45)',
+      borderDash:[6,5],
+      pointRadius:0,
+      fill:false,
+      tension:0
+    });
+  }
   weightChart=new Chart(ctx,{type:'line',data:{
     labels:logs.map(l=>l.date),
-    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
+    datasets
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+function updateTargetWeightInfo(logs){
+  const box=document.getElementById('targetWeightInfo');
+  if(!box) return;
+  document.getElementById('targetWeightVal').value=profile.target_weight_kg||'';
+  if(!profile.target_weight_kg){ box.textContent=''; return; }
+  if(!logs || !logs.length){ box.textContent=`Objectif : ${profile.target_weight_kg}kg`; return; }
+  const current=logs[logs.length-1].weight;
+  const diff=Math.round((current-profile.target_weight_kg)*10)/10;
+  if(Math.abs(diff)<0.1){ box.textContent=`🎯 Objectif atteint (${profile.target_weight_kg}kg) !`; return; }
+  box.textContent=diff>0
+    ? `Objectif ${profile.target_weight_kg}kg — encore ${diff}kg à perdre`
+    : `Objectif ${profile.target_weight_kg}kg — encore ${Math.abs(diff)}kg à prendre`;
+}
+async function saveTargetWeight(){
+  const tw=+val('targetWeightVal');
+  if(!tw) return;
+  const {error}=await sb.from('profiles').update({target_weight_kg:tw}).eq('id',user.id);
+  if(checkErr(error,'définition poids cible')) return;
+  profile.target_weight_kg=tw;
+  loadProfilTab();
 }
 let bodyfatChart=null;
 function drawBodyfatChart(logs){
   const ctx=document.getElementById('bodyfatChart');
   if(bodyfatChart) bodyfatChart.destroy();
+  const datasets=[{label:'% masse grasse',data:logs.map(l=>l.bodyfat_pct),borderColor:'#8fb797',backgroundColor:'rgba(143,183,151,.15)',tension:.2,fill:true}];
+  if(profile.target_bodyfat_pct && logs.length){
+    datasets.push({
+      label:'Objectif',
+      data:logs.map(()=>profile.target_bodyfat_pct),
+      borderColor:'rgba(237,235,230,.45)',
+      borderDash:[6,5],
+      pointRadius:0,
+      fill:false,
+      tension:0
+    });
+  }
   bodyfatChart=new Chart(ctx,{type:'line',data:{
     labels:logs.map(l=>l.date),
-    datasets:[{label:'% masse grasse',data:logs.map(l=>l.bodyfat_pct),borderColor:'#8fb797',backgroundColor:'rgba(143,183,151,.15)',tension:.2,fill:true}]
+    datasets
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+function updateTargetBodyfatInfo(logs){
+  const box=document.getElementById('targetBodyfatInfo');
+  if(!box) return;
+  document.getElementById('targetBodyfatVal').value=profile.target_bodyfat_pct||'';
+  if(!profile.target_bodyfat_pct){ box.textContent=''; return; }
+  if(!logs || !logs.length){ box.textContent=`Objectif : ${profile.target_bodyfat_pct}%`; return; }
+  const current=logs[logs.length-1].bodyfat_pct;
+  const diff=Math.round((current-profile.target_bodyfat_pct)*10)/10;
+  if(Math.abs(diff)<0.1){ box.textContent=`🎯 Objectif atteint (${profile.target_bodyfat_pct}%) !`; return; }
+  box.textContent=diff>0
+    ? `Objectif ${profile.target_bodyfat_pct}% — encore ${diff}% à perdre`
+    : `Objectif ${profile.target_bodyfat_pct}% — encore ${Math.abs(diff)}% à gagner`;
+}
+async function saveTargetBodyfat(){
+  const tb=+val('targetBodyfatVal');
+  if(!tb) return;
+  const {error}=await sb.from('profiles').update({target_bodyfat_pct:tb}).eq('id',user.id);
+  if(checkErr(error,'définition masse grasse cible')) return;
+  profile.target_bodyfat_pct=tb;
+  loadProfilTab();
 }
 async function logBodyfat(){
   const bf=+val('bodyfatLogVal');
@@ -769,6 +877,7 @@ function openQtyBox(name,n){
 }
 
 const UNIT_G={g:1,cas:15,cac:5,poignee:25};
+let mealsById={};
 async function confirmAdd(){
   if(!pending) return;
   const qty=+val('qtyVal'), unit=val('qtyUnit');
@@ -826,10 +935,12 @@ async function confirmCustomFood(){
   document.getElementById('customFoodBox').classList.add('hide');
   loadToday();
 }
-async function editMeal(id,desc,p,c,f,kcal){
-  const nd=prompt('Description :',desc); if(nd===null) return;
-  const np=+prompt('Protéines (g) :',p); const nc=+prompt('Glucides (g) :',c);
-  const nf=+prompt('Lipides (g) :',f); const nk=+prompt('Calories :',kcal);
+async function editMeal(id){
+  const m=mealsById[id];
+  if(!m) return;
+  const nd=prompt('Description :',m.description); if(nd===null) return;
+  const np=+prompt('Protéines (g) :',m.p); const nc=+prompt('Glucides (g) :',m.c);
+  const nf=+prompt('Lipides (g) :',m.f); const nk=+prompt('Calories :',m.kcal);
   const {error}=await sb.from('meals').update({description:nd,p:np,c:nc,f:nf,kcal:nk}).eq('id',id);
   if(checkErr(error,'modification repas')) return;
   loadToday();
@@ -837,6 +948,8 @@ async function editMeal(id,desc,p,c,f,kcal){
 
 async function loadToday(){
   const {data:meals}=await sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at');
+  mealsById={};
+  (meals||[]).forEach(m=>{ mealsById[m.id]=m; });
   renderNutriDays(meals||[]);
 }
 
@@ -875,14 +988,14 @@ function renderNutriDays(meals){
     return `<div class="dayCard">
       <div class="dayHead">${formatDateFR(d)}</div>
       ${items.map(m=>`<div class="mealRow">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal
-        <a href="#" onclick='editMeal("${m.id}",${JSON.stringify(m.description)},${m.p},${m.c},${m.f},${m.kcal});return false' class="iconLink" style="color:var(--brass)" title="Modifier"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></a>
+        <a href="#" onclick="editMeal('${m.id}');return false" class="iconLink" style="color:var(--brass)" title="Modifier"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></a>
         <a href="#" onclick="deleteMeal('${m.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></a>
       </div>`).join('')}
       <div class="ringGrid">
         ${ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal')}
         ${ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot')}
-        ${ring(tot.c,z.c.max,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')}
-        ${ring(tot.f,z.f.max,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')}
+        ${ring(tot.c,z.c.tmin*1.3,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')}
+        ${ring(tot.f,z.f.tmin*1.3,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')}
       </div>
     </div>`;
   }).join('') : '<div class="card"><span style="color:var(--muted)">Aucun repas noté</span></div>';
@@ -945,102 +1058,4 @@ function renderLibrary(){
     .filter(e=>!q || (e.muscle_group||'').toLowerCase().includes(q) || e.name.toLowerCase().includes(q))
     .map(e=>`<div class="exoCard"><b>${e.name}</b> <span style="color:var(--muted)">(${e.muscle_group||''})</span><br>${e.description||''}<br><i style="color:var(--muted)">${e.tips||''}</i><br><a href="${e.demo_url||'#'}" target="_blank">Voir la démo</a><br>
       ${mySessions.length ? `<select id="sel_${e.id}" style="width:auto;display:inline;margin:4px 4px 0 0">${opts}</select><input id="sr_${e.id}" placeholder="4x10-12" style="width:auto;display:inline;margin:4px 4px 0 0"><button style="width:auto;display:inline;padding:4px 8px" onclick="addToProgram('${e.id}')">Ajouter</button>` : '<i style="color:var(--muted)">Crée une séance d\'abord</i>'}
-    </div>`).join('');
-}
-async function addToProgram(exoId){
-  const sessionId=val('sel_'+exoId);
-  const sr=val('sr_'+exoId)||'3x12';
-  const {error}=await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exoId,session_id:sessionId,sets_reps:sr,order_index:myProgram.length});
-  if(checkErr(error,'ajout exercice au programme')) return;
-  loadProgramTab();
-}
-async function removeFromProgram(id){
-  const {error}=await sb.from('program_exercises').delete().eq('id',id);
-  if(checkErr(error,'retrait exercice du programme')) return;
-  loadProgramTab();
-}
-async function renameSession(id,oldName){
-  const newName=prompt('Renommer la séance :',oldName);
-  if(!newName || newName===oldName) return;
-  const {error}=await sb.from('sessions').update({name:newName}).eq('id',id);
-  if(checkErr(error,'renommage séance')) return;
-  loadProgramTab();
-}
-function renderMyProgram(){
-  if(!mySessions.length){ document.getElementById('myProgram').innerHTML='<span style="color:var(--muted)">Crée ta première séance ci-dessus</span>'; return; }
-  document.getElementById('myProgram').innerHTML=mySessions.map(s=>{
-    const exos=myProgram.filter(pe=>pe.session_id===s.id);
-    return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
-      <span style="cursor:pointer" onclick="toggleSession('${s.id}')">▸ <b>${s.name}</b> <span style="color:var(--muted);font-size:12px">(${exos.length})</span></span>
-      <a href="#" onclick="renameSession('${s.id}','${s.name}');return false" style="font-size:11px;color:var(--brass);margin-left:8px">renommer</a>
-      <a href="#" onclick="deleteSession('${s.id}');return false" style="font-size:11px;color:#ef4444;float:right">supprimer</a>
-      <div id="exos_${s.id}" class="hide">
-        ${exos.length ? exos.map(pe=>`<div class="exoCard"><b>${pe.exercises.name}</b> — ${pe.sets_reps}
-          <a href="#" onclick="toggleInfo('${pe.id}');return false" style="color:var(--brass);margin-left:6px">info</a>
-          <a href="#" onclick="removeFromProgram('${pe.id}');return false" style="float:right;color:#ef4444">Retirer</a>
-          <div id="info_${pe.id}" class="hide" style="margin-top:6px;font-size:12px;color:var(--muted)">
-            ${pe.exercises.description||''}<br><i>${pe.exercises.tips||''}</i><br>
-            <a href="${pe.exercises.demo_url||'#'}" target="_blank">Voir la démo</a>
-          </div>
-        </div>`).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px 0">Vide</div>'}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-let progChart=null, myProgExos=[];
-async function loadSuiviTab(){
-  if(!allExercises.length){
-    const {data:ex}=await sb.from('exercises').select('*');
-    allExercises=ex||[];
-  }
-  if(!myProgram.length){
-    const {data:pe}=await sb.from('program_exercises').select('*, exercises(*)').eq('user_id',user.id);
-    myProgram=pe||[];
-  }
-  myProgExos=[...new Map(myProgram.map(pe=>[pe.exercise_id,pe.exercises])).values()];
-  const sel=document.getElementById('logExo');
-  sel.innerHTML=myProgExos.length ? myProgExos.map(e=>`<option value="${e.id}">${e.name}</option>`).join('') : '<option>Ajoute d\'abord un exercice à ton programme</option>';
-  if(myProgExos.length) onLogExoChange();
-}
-async function onLogExoChange(){
-  const exoId=val('logExo');
-  if(!exoId) return;
-  const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',exoId).order('date');
-  const last=logs && logs.length ? logs[logs.length-1] : null;
-  document.getElementById('lastWeight').textContent=last ? `Dernier : ${last.weight}kg x${last.sets} le ${last.date}` : 'Aucun historique';
-  drawChart(logs||[]);
-  renderLogHistory(logs||[]);
-}
-function drawChart(logs){
-  const ctx=document.getElementById('progChart');
-  if(progChart) progChart.destroy();
-  progChart=new Chart(ctx,{type:'line',data:{
-    labels:logs.map(l=>l.date),
-    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
-  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
-}
-async function addLog(){
-  const exoId=val('logExo');
-  if(!exoId) return;
-  const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
-    weight:+val('logWeight')||0, sets:+val('logSets')||0, reps:val('logReps')});
-  if(checkErr(error,'ajout résultat séance')) return;
-  document.getElementById('logWeight').value='';
-  document.getElementById('logSets').value='';
-  document.getElementById('logReps').value='';
-  onLogExoChange();
-}
-function renderLogHistory(logs){
-  document.getElementById('logHistory').innerHTML=logs.length ? [...logs].reverse().map(l=>
-    `<div class="exoCard">${l.date} — ${l.weight}kg x${l.sets} (${l.reps||''})</div>`
-  ).join('') : '<span style="color:var(--muted)">Aucun historique pour cet exercice</span>';
-}
-</script></body></html>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  });
-}
-</script>
+    </div>`).join
