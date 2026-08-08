@@ -967,7 +967,7 @@ async function loadToday(){
 function zones(w){
   return {
     kcal:{target:profile.kcal_target, gmin:profile.kcal_target*0.93, gmax:profile.kcal_target*1.06, ymin:profile.kcal_target*0.84, ymax:profile.kcal_target*1.17},
-    p:{min:w*1.4, target:w*1.8, ringMax:w*1.8*1.4},
+    p:{min:w*1.4, target:w*1.8, ringMax:w*1.8*1.4, max:w*1.8*2},
     c:{min:w*1, tmin:w*2, tmax:w*4, max:w*5},
     f:{min:w*0.5, tmin:w*0.8, tmax:w*1.2, max:w*1.5}
   };
@@ -985,10 +985,17 @@ function formatDateFR(d){
   const dateObj=new Date(+y,+m-1,+day);
   return days[dateObj.getDay()]+' '+day+'/'+m+'/'+y;
 }
-function ring(val,ringMax,cls,target,danger,unit,label){
+function ring(val,ringMax,cls,target,danger,unit,label,surplusMax){
   const r=26,c=2*Math.PI*r,pct=Math.max(0,Math.min(100,val/ringMax*100)),off=c-(pct/100)*c;
-  const fc=danger?'d':cls;
-  return '<div class="ringCol"><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="'+r+'"></circle><circle class="ringFill '+fc+'" cx="32" cy="32" r="'+r+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"></circle></svg><div class="ringCenter'+(danger?' dg':'')+'">'+Math.round(val)+unit+'</div></div><div class="ringLabel">'+label+'</div><div class="ringTarget">/'+Math.round(target)+unit+'</div></div>';
+  var fillClass='', strokeAttr='';
+  if(surplusMax && val>target){
+    var ratio=Math.max(0,Math.min(1,(val-target)/(surplusMax-target)));
+    var gr=Math.round(34+(5-34)*ratio), gg=Math.round(197+(5-197)*ratio), gb=Math.round(94+(5-94)*ratio);
+    strokeAttr=' stroke="rgb('+gr+','+gg+','+gb+')"';
+  } else {
+    fillClass=' '+(danger?'d':cls);
+  }
+  return '<div class="ringCol"><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="'+r+'"></circle><circle class="ringFill'+fillClass+'" cx="32" cy="32" r="'+r+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"'+strokeAttr+'></circle></svg><div class="ringCenter'+(danger?' dg':'')+'">'+Math.round(val)+unit+'</div></div><div class="ringLabel">'+label+'</div><div class="ringTarget">/'+Math.round(target)+unit+'</div></div>';
 }
 function renderNutriDays(meals){
   const z=zones(profile.weight_kg);
@@ -1014,10 +1021,10 @@ function renderNutriDays(meals){
     }
     out += '<div class="dayCard"><div class="dayHead">'+formatDateFR(d)+'</div>'+mealsHtml
       + '<div class="ringGrid">'
-      + ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal')
-      + ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot')
-      + ring(tot.c,z.c.tmin*1.3,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')
-      + ring(tot.f,z.f.tmin*1.3,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')
+      + ring(tot.k,z.kcal.target,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal',z.kcal.ymax)
+      + ring(tot.p,z.p.target,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot',z.p.max)
+      + ring(tot.c,z.c.tmin,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc',z.c.max)
+      + ring(tot.f,z.f.tmin,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip',z.f.max)
       + '</div></div>';
   }
   document.getElementById('nutriDays').innerHTML=out;
