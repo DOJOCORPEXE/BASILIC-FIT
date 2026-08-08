@@ -1148,7 +1148,7 @@ function renderMyProgram(){
   }).join('');
 }
 
-let progChart=null, myProgExos=[];
+let progChart=null, myProgExos=[], workoutLogsById={};
 let calMonth=new Date(); calMonth.setDate(1);
 let calSelectedDate=new Date().toISOString().slice(0,10);
 let planningData=[];
@@ -1261,6 +1261,8 @@ async function onLogExoChange(){
   const exoId=val('logExo');
   if(!exoId) return;
   const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',exoId).order('date');
+  workoutLogsById={};
+  (logs||[]).forEach(l=>{ workoutLogsById[l.id]=l; });
   const last=logs && logs.length ? logs[logs.length-1] : null;
   document.getElementById('lastWeight').textContent=last ? `Dernier : ${last.weight}kg x${last.sets} le ${last.date}` : 'Aucun historique';
   drawChart(logs||[]);
@@ -1287,8 +1289,27 @@ async function addLog(){
 }
 function renderLogHistory(logs){
   document.getElementById('logHistory').innerHTML=logs.length ? [...logs].reverse().map(l=>
-    `<div class="exoCard">${l.date} — ${l.weight}kg x${l.sets} (${l.reps||''})</div>`
+    `<div class="exoCard">${l.date} — ${l.weight}kg x${l.sets} (${l.reps||''})
+      <a href="#" onclick="editWorkoutLog('${l.id}');return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
+      <a href="#" onclick="deleteWorkoutLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
+    </div>`
   ).join('') : '<span style="color:var(--muted)">Aucun historique pour cet exercice</span>';
+}
+async function editWorkoutLog(id){
+  const l=workoutLogsById[id];
+  if(!l) return;
+  const nw=+prompt('Poids (kg) :', l.weight);
+  const ns=+prompt('Séries :', l.sets);
+  const nr=prompt('Reps (ex: 10,10,9,8) :', l.reps||'');
+  const {error}=await sb.from('workout_logs').update({weight:nw, sets:ns, reps:nr}).eq('id',id);
+  if(checkErr(error,'modification résultat séance')) return;
+  onLogExoChange();
+}
+async function deleteWorkoutLog(id){
+  if(!confirm('Supprimer cette entrée ?')) return;
+  const {error}=await sb.from('workout_logs').delete().eq('id',id);
+  if(checkErr(error,'suppression résultat séance')) return;
+  onLogExoChange();
 }
 </script></body></html>
 <script>
