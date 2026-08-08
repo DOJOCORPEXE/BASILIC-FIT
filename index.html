@@ -975,7 +975,8 @@ function zones(w){
 function colorClass(val,zone,type){
   if(type==='kcal') return (val>=zone.gmin&&val<=zone.gmax)?'g':(val>=zone.ymin&&val<=zone.ymax)?'y':'r';
   if(type==='p') return val>=zone.target?'g':val>=zone.min?'y':'r';
-  return (val>=zone.tmin&&val<=zone.tmax)?'g':(val>=zone.min&&val<=zone.max)?'y':'r';
+  var softTmin=zone.tmin*0.95;
+  return (val>=softTmin&&val<=zone.tmax)?'g':(val>=zone.min&&val<=zone.max)?'y':'r';
 }
 function formatDateFR(d){
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
