@@ -29,6 +29,7 @@ button{
   box-shadow:0 4px 10px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -2px 3px rgba(0,0,0,.22);
 }
 button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transform:translateY(1px)}
+button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);color:#fff}
 .card{
   background-color:rgba(33,34,35,.85);
   background-image:
@@ -139,6 +140,10 @@ button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transform:translateY(1p
 <div id="auth" class="card">
   <input id="email" placeholder="email">
   <input id="pass" type="password" placeholder="mot de passe">
+  <label style="font-size:11.5px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;margin:10px 2px 6px;line-height:1.4">
+    <input type="checkbox" id="consentData" style="width:auto;margin:2px 0 0;flex-shrink:0">
+    <span>J'accepte que mes données (poids, objectifs, repas, séances) soient stockées pour faire fonctionner l'app. Voir les <a href="#" onclick="toggleLegal();return false" style="color:var(--brass)">mentions légales</a>.</span>
+  </label>
   <button onclick="signup()">Créer un compte</button>
   <button onclick="login()">Se connecter</button>
 </div>
@@ -324,14 +329,95 @@ button:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.45);transform:translateY(1p
       <button onclick="updateProfile()">Recalculer et sauvegarder</button>
     </div>
     <div class="card">
+      <b>Confidentialité</b>
+      <p style="font-size:12.5px;color:var(--muted);margin:8px 0;line-height:1.5">On stocke ton profil (poids, taille, âge, objectifs), tes repas et tes séances, uniquement pour faire fonctionner l'app. Rien n'est partagé ni revendu. Tu peux tout supprimer définitivement ci-dessous.</p>
+      <button class="danger" onclick="deleteAccount()">Supprimer mes données et mon compte</button>
+    </div>
+    <div class="card">
+      <b>Suivi de la masse grasse</b>
+      <div class="qtyRow">
+        <input id="bodyfatLogVal" type="number" step="0.1" placeholder="% masse grasse aujourd'hui">
+        <button style="flex:1" onclick="logBodyfat()">Noter</button>
+      </div>
+      <canvas id="bodyfatChart" height="160"></canvas>
+      <div id="bodyfatLogList" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
       <b>Suivi du poids</b>
       <div class="qtyRow">
         <input id="weightLogVal" type="number" placeholder="Poids aujourd'hui (kg)">
         <button style="flex:1" onclick="logWeight()">Noter</button>
       </div>
       <canvas id="weightChart" height="160"></canvas>
+      <div id="weightLogList" style="margin-top:6px"></div>
     </div>
   </div>
+</div>
+
+<div style="text-align:center;margin-top:30px;opacity:.7">
+  <a href="#" onclick="toggleLegal();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Mentions légales</a>
+  <span style="color:var(--muted);font-size:11px;margin:0 6px">·</span>
+  <a href="#" onclick="toggleMethods();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Méthodes</a>
+</div>
+<div id="legalBox" class="card hide" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
+  <b style="color:var(--text)">Mentions légales</b><br><br>
+
+  <b style="color:var(--text)">Nature du site</b><br>
+  No Pain No Gain est une application de suivi sportif et nutritionnel, non commerciale, sans publicité.<br><br>
+
+  <b style="color:var(--text)">Hébergement</b><br>
+  Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA — vercel.com<br><br>
+
+  <b style="color:var(--text)">Base de données</b><br>
+  Supabase Inc. (hébergement des données et authentification par email/mot de passe)<br><br>
+
+  <b style="color:var(--text)">Service tiers utilisé</b><br>
+  La recherche d'aliments interroge l'API publique OpenFoodFacts (openfoodfacts.org) pour compléter la base d'aliments génériques intégrée à l'application. Aucune donnée personnelle n'est transmise à ce service, seul le terme recherché.<br><br>
+
+  <b style="color:var(--text)">Données collectées et finalité</b><br>
+  Email et mot de passe (création de compte), profil (poids, taille, âge, sexe, objectifs), repas et macros saisis, séances d'entraînement et résultats, historique de poids, photo de profil optionnelle. Ces données servent exclusivement au calcul de tes cibles nutritionnelles et au suivi de ta progression — elles ne sont ni partagées, ni revendues, ni utilisées à des fins publicitaires.<br><br>
+
+  <b style="color:var(--text)">Conservation</b><br>
+  Les données sont conservées tant que le compte existe. Tu peux les supprimer intégralement et à tout moment depuis l'onglet Profil (« Supprimer mes données et mon compte »).<br><br>
+
+  <b style="color:var(--text)">Cookies</b><br>
+  Aucun cookie publicitaire ni traceur analytics. Seul un jeton de session technique (géré par Supabase Auth) est utilisé pour te garder connecté.<br><br>
+
+  <b style="color:var(--text)">Tes droits</b><br>
+  Accès, rectification et suppression de tes données sont disponibles directement dans l'onglet Profil. Pour toute autre demande, un moyen de contact sera publié ici avec l'identité de l'éditeur.
+</div>
+
+<div id="methodsBox" class="card hide" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
+  <b style="color:var(--text)">Méthodes de calcul</b><br><br>
+
+  <b style="color:var(--text)">Métabolisme de base (BMR)</b><br>
+  Calculé par la formule de <b>Mifflin-St Jeor</b> (référence standard, plus fiable que Harris-Benedict) à partir du poids, de la taille, de l'âge et du sexe. Si tu renseignes ton % de masse grasse, la formule de <b>Katch-McArdle</b> prend le relais — elle se base sur la masse maigre réelle et devient plus précise si tu connais ce chiffre.<br><br>
+
+  <b style="color:var(--text)">Activité hors sport (NEAT)</b><br>
+  Le BMR est multiplié selon ton niveau déclaré : sédentaire ×1,2 · léger ×1,35 · actif ×1,5. Ça couvre les dépenses du quotidien hors séances (marche, tâches, position debout...).<br><br>
+
+  <b style="color:var(--text)">Dépense sportive</b><br>
+  Ajoutée séparément : (séances/semaine × durée moyenne × kcal/minute selon intensité) ÷ 7. Intensité légère ≈ 5 kcal/min, modérée ≈ 7, élevée ≈ 9 — des repères usuels, pas une mesure réelle de ta dépense (un capteur cardio ferait mieux, mais demande du matériel).<br><br>
+
+  <b style="color:var(--text)">Maintenance</b><br>
+  BMR × NEAT + dépense sportive quotidienne moyenne. C'est l'estimation du nombre de calories qui te maintiendrait à poids stable.<br><br>
+
+  <b style="color:var(--text)">Cible calorique</b><br>
+  Maintenance × un multiplicateur selon ton objectif et son intensité :<br>
+  • Sèche : douce ×0,92 (−8%) · modérée ×0,85 (−15%) · agressive ×0,78 (−22%)<br>
+  • Maintien : ×1,0 quelle que soit l'intensité<br>
+  • Prise de masse : douce ×1,05 (+5%) · modérée ×1,10 (+10%) · agressive ×1,15 (+15%)<br><br>
+
+  <b style="color:var(--text)">Protéines, lipides, glucides</b><br>
+  Protéines fixées à <b>1,8g/kg de poids</b> (haut de la fourchette recommandée pour préserver le muscle en déficit, cf. littérature sur la recomposition corporelle). Lipides fixés à <b>0,8g/kg</b> (couvre les besoins hormonaux). Les glucides absorbent le reste des calories cibles une fois protéines et lipides retirés.<br><br>
+
+  <b style="color:var(--text)">Couleurs des anneaux (vert/jaune/rouge)</b><br>
+  Calculées par rapport à ta cible du jour, avec une marge de tolérance : vert si tu es proche de la cible, jaune si tu t'en écartes modérément, rouge au-delà. Les seuils exacts varient par macro (les calories et glucides ont une fourchette plus stricte que les lipides, par exemple) et sont exprimés en g/kg de poids de corps pour s'adapter à ta morphologie.<br><br>
+
+  <b style="color:var(--text)">Ajustement automatique</b><br>
+  Quand tu notes ton poids régulièrement, l'app compare ta progression réelle (sur au moins 7 jours) à la progression attendue selon ton déficit/surplus calculé (base : 1kg de graisse ≈ 7700 kcal). Si l'écart est significatif et que ça fait au moins 14 jours depuis le dernier ajustement, ta cible calorique est corrigée automatiquement de ±3 à 5% pour recaler la trajectoire sur ton objectif.<br><br>
+
+  <span style="font-style:italic">Ce sont des formules de référence généralistes, pas un avis médical. Elles donnent une estimation de départ à affiner avec tes résultats réels dans le temps.</span>
 </div>
 
 </div>
@@ -340,6 +426,9 @@ const sb = window.supabase.createClient('https://dbizbwitbhsirbvetzmw.supabase.c
 let user=null, profile=null, pending=null;
 
 async function signup(){
+  if(!document.getElementById('consentData').checked){
+    return alert('Coche la case de consentement sur le stockage de tes données avant de créer un compte.');
+  }
   const {data,error}=await sb.auth.signUp({email:val('email'),password:val('pass')});
   if(error) return alert(error.message);
   alert('Compte créé. Vérifie ton email si confirmation demandée, puis connecte-toi.');
@@ -350,6 +439,12 @@ async function login(){
   boot();
 }
 function val(id){return document.getElementById(id).value;}
+function toggleLegal(){
+  document.getElementById('legalBox').classList.toggle('hide');
+}
+function toggleMethods(){
+  document.getElementById('methodsBox').classList.toggle('hide');
+}
 function checkErr(error, context){
   if(error){
     alert('Erreur Supabase ('+context+') : '+error.message);
@@ -358,6 +453,8 @@ function checkErr(error, context){
   }
   return false;
 }
+const ICON_EDIT='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>';
+const ICON_DELETE='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>';
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
@@ -434,6 +531,24 @@ async function loadProfilTab(){
   document.getElementById('targetSummary').innerHTML=`Maintenance ~${profile.maintenance} kcal<br>Cible : ${profile.kcal_target} kcal — P${profile.protein_target}g / G${profile.carb_target}g / L${profile.fat_target}g`;
   const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
   drawWeightChart(logs||[]);
+  renderWeightLogList(logs||[]);
+  const {data:bfLogs}=await sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date');
+  drawBodyfatChart(bfLogs||[]);
+  renderBodyfatLogList(bfLogs||[]);
+}
+async function deleteAccount(){
+  if(!confirm('Supprimer définitivement toutes tes données (profil, repas, séances, historique de poids) ? Cette action est irréversible.')) return;
+  if(!confirm('Vraiment sûr ? Il n\'y a aucun retour en arrière possible.')) return;
+  const uid=user.id;
+  for(const t of ['meals','workout_logs','weight_logs','program_exercises','sessions']){
+    const {error}=await sb.from(t).delete().eq('user_id',uid);
+    if(checkErr(error,'suppression '+t)) return;
+  }
+  const {error:profErr}=await sb.from('profiles').delete().eq('id',uid);
+  if(checkErr(profErr,'suppression profil')) return;
+  alert('Tes données ont été supprimées. Ton compte de connexion (email) existe techniquement encore côté authentification mais ne contient plus aucune donnée — contacte-moi si tu veux qu\'il soit aussi purgé définitivement.');
+  await sb.auth.signOut();
+  location.reload();
 }
 async function uploadAvatar(file){
   if(!file) return;
@@ -487,6 +602,63 @@ function drawWeightChart(logs){
     datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
+let bodyfatChart=null;
+function drawBodyfatChart(logs){
+  const ctx=document.getElementById('bodyfatChart');
+  if(bodyfatChart) bodyfatChart.destroy();
+  bodyfatChart=new Chart(ctx,{type:'line',data:{
+    labels:logs.map(l=>l.date),
+    datasets:[{label:'% masse grasse',data:logs.map(l=>l.bodyfat_pct),borderColor:'#8fb797',backgroundColor:'rgba(143,183,151,.15)',tension:.2,fill:true}]
+  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+async function logBodyfat(){
+  const bf=+val('bodyfatLogVal');
+  if(!bf) return;
+  const {error}=await sb.from('bodyfat_logs').insert({user_id:user.id,bodyfat_pct:bf});
+  if(checkErr(error,'ajout masse grasse')) return;
+  document.getElementById('bodyfatLogVal').value='';
+  await syncBodyfatToProfile();
+  loadProfilTab();
+  loadToday();
+}
+// Resynchronise profiles.body_fat_pct (et les cibles calculées) sur l'entrée
+// la plus récente de bodyfat_logs, après TOUT changement (ajout, modif,
+// suppression). Si plus aucune entrée, revient à null (BMR retombe sur
+// Mifflin-St Jeor au lieu de Katch-McArdle).
+async function syncBodyfatToProfile(){
+  const {data:logs}=await sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(1);
+  const latest = logs && logs.length ? logs[0].bodyfat_pct : null;
+  const updatedProf={...profile, body_fat_pct:latest};
+  const t=computeTargets(updatedProf);
+  const {error}=await sb.from('profiles').update({body_fat_pct:latest,...t}).eq('id',user.id);
+  if(checkErr(error,'resynchro masse grasse')) return;
+  profile={...profile,body_fat_pct:latest,...t};
+}
+function renderBodyfatLogList(logs){
+  const box=document.getElementById('bodyfatLogList');
+  if(!box) return;
+  box.innerHTML=logs.length ? [...logs].reverse().map(l=>`<div class="mealRow">${l.date} — ${l.bodyfat_pct}%
+    <a href="#" onclick="editBodyfatLog('${l.id}',${l.bodyfat_pct});return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
+    <a href="#" onclick="deleteBodyfatLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
+  </div>`).join('') : '';
+}
+async function editBodyfatLog(id, oldVal){
+  const nv=+prompt('Nouvelle valeur (% masse grasse) :', oldVal);
+  if(!nv) return;
+  const {error}=await sb.from('bodyfat_logs').update({bodyfat_pct:nv}).eq('id',id);
+  if(checkErr(error,'modification masse grasse')) return;
+  await syncBodyfatToProfile();
+  loadProfilTab();
+  loadToday();
+}
+async function deleteBodyfatLog(id){
+  if(!confirm('Supprimer cette entrée de masse grasse ?')) return;
+  const {error}=await sb.from('bodyfat_logs').delete().eq('id',id);
+  if(checkErr(error,'suppression masse grasse')) return;
+  await syncBodyfatToProfile();
+  loadProfilTab();
+  loadToday();
+}
 async function logWeight(){
   const w=+val('weightLogVal');
   if(!w) return;
@@ -494,6 +666,27 @@ async function logWeight(){
   if(checkErr(error,'ajout poids')) return;
   document.getElementById('weightLogVal').value='';
   await checkAutoAdjust();
+  loadProfilTab();
+}
+function renderWeightLogList(logs){
+  const box=document.getElementById('weightLogList');
+  if(!box) return;
+  box.innerHTML=logs.length ? [...logs].reverse().map(l=>`<div class="mealRow">${l.date} — ${l.weight}kg
+    <a href="#" onclick="editWeightLog('${l.id}',${l.weight});return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
+    <a href="#" onclick="deleteWeightLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
+  </div>`).join('') : '';
+}
+async function editWeightLog(id, oldVal){
+  const nv=+prompt('Nouveau poids (kg) :', oldVal);
+  if(!nv) return;
+  const {error}=await sb.from('weight_logs').update({weight:nv}).eq('id',id);
+  if(checkErr(error,'modification poids')) return;
+  loadProfilTab();
+}
+async function deleteWeightLog(id){
+  if(!confirm('Supprimer cette entrée de poids ?')) return;
+  const {error}=await sb.from('weight_logs').delete().eq('id',id);
+  if(checkErr(error,'suppression poids')) return;
   loadProfilTab();
 }
 async function checkAutoAdjust(){
