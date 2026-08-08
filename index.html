@@ -162,9 +162,9 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
   <input id="pass" type="password" placeholder="mot de passe">
   <label style="font-size:11.5px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;margin:10px 2px 6px;line-height:1.4">
     <input type="checkbox" id="consentData" style="width:auto;margin:2px 0 0;flex-shrink:0">
-    <span>J'accepte que mes données (poids, objectifs, repas, séances) soient stockées pour faire fonctionner l'app. Voir les <a href="#" onclick="toggleLegal();return false" style="color:var(--brass)">mentions légales</a>.</span>
+    <span>J'accepte que mes donnees (poids, objectifs, repas, seances) soient stockees pour faire fonctionner l'app. Voir les <a href="#" onclick="toggleLegal();return false" style="color:var(--brass)">mentions legales</a>.</span>
   </label>
-  <button onclick="signup()">Créer un compte</button>
+  <button onclick="signup()">Creer un compte</button>
   <button onclick="login()">Se connecter</button>
 </div>
 
@@ -172,32 +172,32 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
   <h3>Ton profil</h3>
   <input id="weight" type="number" placeholder="Poids (kg)">
   <input id="height" type="number" placeholder="Taille (cm)">
-  <input id="age" type="number" placeholder="Âge">
+  <input id="age" type="number" placeholder="Age">
   <select id="sex"><option value="h">Homme</option><option value="f">Femme</option></select>
-  <input id="bodyfat" type="number" placeholder="% masse grasse (optionnel, plus précis)">
-  <label style="font-size:11px;color:var(--muted)">Activité hors sport (travail/quotidien)</label>
+  <input id="bodyfat" type="number" placeholder="% masse grasse (optionnel, plus precis)">
+  <label style="font-size:11px;color:var(--muted)">Activite hors sport (travail/quotidien)</label>
   <select id="neatLevel">
-    <option value="sed">Sédentaire (bureau/télétravail)</option>
-    <option value="leger">Léger (debout, marche régulière)</option>
+    <option value="sed">Sedentaire (bureau/teletravail)</option>
+    <option value="leger">Leger (debout, marche reguliere)</option>
     <option value="actif">Actif (physique au quotidien)</option>
   </select>
   <div class="qtyRow">
-    <input id="sessionsWeek" type="number" placeholder="Séances sport/sem" value="4">
-    <input id="sessionDuration" type="number" placeholder="Durée moy. (min)" value="60">
+    <input id="sessionsWeek" type="number" placeholder="Seances sport/sem" value="4">
+    <input id="sessionDuration" type="number" placeholder="Duree moy. (min)" value="60">
   </div>
   <select id="intensity">
-    <option value="low">Intensité légère</option>
-    <option value="med">Intensité modérée</option>
-    <option value="high">Intensité élevée</option>
+    <option value="low">Intensite legere</option>
+    <option value="med">Intensite moderee</option>
+    <option value="high">Intensite elevee</option>
   </select>
   <select id="goal">
     <option value="maintien" selected>Maintien</option>
-    <option value="seche">Sèche (perte de gras)</option>
+    <option value="seche">Seche (perte de gras)</option>
     <option value="prise">Prise de masse</option>
   </select>
   <select id="aggressiveness">
     <option value="doux">Douce</option>
-    <option value="mod">Modérée</option>
+    <option value="mod">Moderee</option>
     <option value="agressif">Agressive</option>
   </select>
   <button onclick="saveProfile()">Calculer mes cibles</button>
@@ -222,12 +222,12 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
   </div>
 
   <div id="customFoodBox" class="card hide">
-    <div style="margin-bottom:4px;font-size:13px"><b>Ajouter un aliment personnalisé</b></div>
+    <div style="margin-bottom:4px;font-size:13px"><b>Ajouter un aliment personnalise</b></div>
     <input id="cfName" placeholder="Nom (ex: Riz au poulet maison)">
     <label style="font-size:11px;color:var(--muted)">Comment tu rentres les valeurs ?</label>
     <select id="cfMode" onchange="updateCustomFoodMode()">
-      <option value="100g">Macros pour 100g, puis je précise la quantité mangée</option>
-      <option value="exact">Macros de la portion exacte que j'ai mangée</option>
+      <option value="100g">Macros pour 100g, puis je precise la quantite mangee</option>
+      <option value="exact">Macros de la portion exacte que j'ai mangee</option>
     </select>
     <div class="row3" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
       <div><label style="font-size:10px;color:var(--muted)">Kcal</label><input id="cfKcal" type="number"></div>
@@ -236,12 +236,12 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       <div><label style="font-size:10px;color:var(--muted)">Lip (g)</label><input id="cfF" type="number"></div>
     </div>
     <div id="cfQtyRow" class="qtyRow">
-      <input id="cfQty" type="number" placeholder="Quantité mangée" value="100">
+      <input id="cfQty" type="number" placeholder="Quantite mangee" value="100">
       <select id="cfQtyUnit">
         <option value="g">grammes</option>
         <option value="cas">CAS (15g)</option>
         <option value="cac">CAC (5g)</option>
-        <option value="poignee">Poignée (25g)</option>
+        <option value="poignee">Poignee (25g)</option>
       </select>
     </div>
     <button onclick="confirmCustomFood()">Ajouter</button>
@@ -250,12 +250,12 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
   <div id="qtyBox" class="card hide">
     <div id="qtyLabel" style="margin-bottom:6px;font-size:13px"></div>
     <div class="qtyRow">
-      <input id="qtyVal" type="number" placeholder="Quantité" value="100">
+      <input id="qtyVal" type="number" placeholder="Quantite" value="100">
       <select id="qtyUnit">
         <option value="g">grammes</option>
         <option value="cas">CAS (15g)</option>
         <option value="cac">CAC (5g)</option>
-        <option value="poignee">Poignée (25g)</option>
+        <option value="poignee">Poignee (25g)</option>
       </select>
     </div>
     <button onclick="confirmAdd()">Ajouter</button>
@@ -266,20 +266,20 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
 
   <div id="progPane" class="hide">
     <div class="card">
-      <b>Tes séances</b>
-      <button onclick="toggleCreate()" style="margin-top:6px">+ Créer / ajouter des exercices</button>
+      <b>Tes seances</b>
+      <button onclick="toggleCreate()" style="margin-top:6px">+ Creer / ajouter des exercices</button>
       <div id="myProgram"></div>
     </div>
     <div id="createZone" class="hide">
       <div class="card">
-        <b>Nouvelle séance</b>
+        <b>Nouvelle seance</b>
         <div class="qtyRow">
-          <input id="newSessionName" placeholder="Ex: Bras Épaule A">
-          <button style="flex:1" onclick="createSession()">Créer</button>
+          <input id="newSessionName" placeholder="Ex: Bras Epaule A">
+          <button style="flex:1" onclick="createSession()">Creer</button>
         </div>
       </div>
       <div class="card">
-        <b>Bibliothèque d'exercices</b>
+        <b>Bibliotheque d'exercices</b>
         <input id="exoSearch" placeholder="Filtrer par groupe musculaire..." oninput="renderLibrary()">
         <div id="library"></div>
       </div>
@@ -288,12 +288,12 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
 
   <div id="suiviPane" class="hide">
     <div class="card">
-      <b>Noter un résultat</b>
+      <b>Noter un resultat</b>
       <select id="logExo" onchange="onLogExoChange()"></select>
       <div id="lastWeight" style="font-size:12px;color:var(--muted);margin:2px 0"></div>
       <div class="qtyRow">
         <input id="logWeight" type="number" placeholder="Poids (kg)">
-        <input id="logSets" type="number" placeholder="Séries">
+        <input id="logSets" type="number" placeholder="Series">
       </div>
       <input id="logReps" placeholder="Reps (ex: 10,10,9,8)">
       <button onclick="addLog()">Ajouter</button>
@@ -318,32 +318,32 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       <b>Informations</b>
       <input id="pWeight" type="number" placeholder="Poids (kg)">
       <input id="pHeight" type="number" placeholder="Taille (cm)">
-      <input id="pAge" type="number" placeholder="Âge">
+      <input id="pAge" type="number" placeholder="Age">
       <select id="pSex"><option value="h">Homme</option><option value="f">Femme</option></select>
       <input id="pBodyfat" type="number" placeholder="% masse grasse (optionnel)">
-      <label style="font-size:11px;color:var(--muted)">Activité hors sport</label>
+      <label style="font-size:11px;color:var(--muted)">Activite hors sport</label>
       <select id="pNeatLevel">
-        <option value="sed">Sédentaire</option>
-        <option value="leger">Léger</option>
+        <option value="sed">Sedentaire</option>
+        <option value="leger">Leger</option>
         <option value="actif">Actif</option>
       </select>
       <div class="qtyRow">
-        <input id="pSessionsWeek" type="number" placeholder="Séances/sem">
-        <input id="pSessionDuration" type="number" placeholder="Durée (min)">
+        <input id="pSessionsWeek" type="number" placeholder="Seances/sem">
+        <input id="pSessionDuration" type="number" placeholder="Duree (min)">
       </div>
       <select id="pIntensity">
-        <option value="low">Intensité légère</option>
-        <option value="med">Intensité modérée</option>
-        <option value="high">Intensité élevée</option>
+        <option value="low">Intensite legere</option>
+        <option value="med">Intensite moderee</option>
+        <option value="high">Intensite elevee</option>
       </select>
       <select id="pGoal">
-        <option value="seche">Sèche</option>
+        <option value="seche">Seche</option>
         <option value="maintien">Maintien</option>
         <option value="prise">Prise de masse</option>
       </select>
       <select id="pAggressiveness">
         <option value="doux">Douce</option>
-        <option value="mod">Modérée</option>
+        <option value="mod">Moderee</option>
         <option value="agressif">Agressive</option>
       </select>
       <button onclick="updateProfile()">Recalculer et sauvegarder</button>
@@ -356,7 +356,7 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       </div>
       <div class="qtyRow">
         <input id="targetBodyfatVal" type="number" step="0.1" placeholder="% masse grasse cible">
-        <button style="flex:1" onclick="saveTargetBodyfat()">Définir</button>
+        <button style="flex:1" onclick="saveTargetBodyfat()">Definir</button>
       </div>
       <div id="targetBodyfatInfo" style="font-size:12px;color:var(--muted);margin:2px 2px 12px"></div>
       <canvas id="bodyfatChart" height="160"></canvas>
@@ -370,84 +370,84 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       </div>
       <div class="qtyRow">
         <input id="targetWeightVal" type="number" placeholder="Poids cible (kg)">
-        <button style="flex:1" onclick="saveTargetWeight()">Définir</button>
+        <button style="flex:1" onclick="saveTargetWeight()">Definir</button>
       </div>
       <div id="targetWeightInfo" style="font-size:12px;color:var(--muted);margin:2px 2px 12px"></div>
       <canvas id="weightChart" height="160"></canvas>
       <div id="weightLogList" style="margin-top:6px"></div>
     </div>
     <div class="card">
-      <b>Confidentialité</b>
-      <p style="font-size:12.5px;color:var(--muted);margin:8px 0;line-height:1.5">On stocke ton profil (poids, taille, âge, objectifs), tes repas et tes séances, uniquement pour faire fonctionner l'app. Rien n'est partagé ni revendu. Tu peux tout supprimer définitivement ci-dessous.</p>
-      <button class="danger" onclick="deleteAccount()">Supprimer mes données et mon compte</button>
+      <b>Confidentialite</b>
+      <p style="font-size:12.5px;color:var(--muted);margin:8px 0;line-height:1.5">On stocke ton profil (poids, taille, age, objectifs), tes repas et tes seances, uniquement pour faire fonctionner l'app. Rien n'est partage ni revendu. Tu peux tout supprimer definitivement ci-dessous.</p>
+      <button class="danger" onclick="deleteAccount()">Supprimer mes donnees et mon compte</button>
     </div>
   </div>
 </div>
 
 <div style="text-align:center;margin-top:30px;opacity:.7">
-  <a href="#" onclick="toggleLegal();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Mentions légales</a>
-  <span style="color:var(--muted);font-size:11px;margin:0 6px">·</span>
-  <a href="#" onclick="toggleMethods();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Méthodes</a>
+  <a href="#" onclick="toggleLegal();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Mentions legales</a>
+  <span style="color:var(--muted);font-size:11px;margin:0 6px">.</span>
+  <a href="#" onclick="toggleMethods();return false" style="color:var(--muted);font-size:11px;text-decoration:underline">Methodes</a>
 </div>
 <div id="legalBox" class="card hide" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
-  <b style="color:var(--text)">Mentions légales</b><br><br>
+  <b style="color:var(--text)">Mentions legales</b><br><br>
 
   <b style="color:var(--text)">Nature du site</b><br>
-  No Pain No Gain est une application de suivi sportif et nutritionnel, non commerciale, sans publicité.<br><br>
+  No Pain No Gain est une application de suivi sportif et nutritionnel, non commerciale, sans publicite.<br><br>
 
-  <b style="color:var(--text)">Hébergement</b><br>
-  Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA — vercel.com<br><br>
+  <b style="color:var(--text)">Hebergement</b><br>
+  Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA - vercel.com<br><br>
 
-  <b style="color:var(--text)">Base de données</b><br>
-  Supabase Inc. (hébergement des données et authentification par email/mot de passe)<br><br>
+  <b style="color:var(--text)">Base de donnees</b><br>
+  Supabase Inc. (hebergement des donnees et authentification par email/mot de passe)<br><br>
 
-  <b style="color:var(--text)">Service tiers utilisé</b><br>
-  La recherche d'aliments interroge l'API publique OpenFoodFacts (openfoodfacts.org) pour compléter la base d'aliments génériques intégrée à l'application. Aucune donnée personnelle n'est transmise à ce service, seul le terme recherché.<br><br>
+  <b style="color:var(--text)">Service tiers utilise</b><br>
+  La recherche d'aliments interroge l'API publique OpenFoodFacts (openfoodfacts.org) pour completer la base d'aliments generiques integree a l'application. Aucune donnee personnelle n'est transmise a ce service, seul le terme recherche.<br><br>
 
-  <b style="color:var(--text)">Données collectées et finalité</b><br>
-  Email et mot de passe (création de compte), profil (poids, taille, âge, sexe, objectifs), repas et macros saisis, séances d'entraînement et résultats, historique de poids, photo de profil optionnelle. Ces données servent exclusivement au calcul de tes cibles nutritionnelles et au suivi de ta progression — elles ne sont ni partagées, ni revendues, ni utilisées à des fins publicitaires.<br><br>
+  <b style="color:var(--text)">Donnees collectees et finalite</b><br>
+  Email et mot de passe (creation de compte), profil (poids, taille, age, sexe, objectifs), repas et macros saisis, seances d'entrainement et resultats, historique de poids, photo de profil optionnelle. Ces donnees servent exclusivement au calcul de tes cibles nutritionnelles et au suivi de ta progression - elles ne sont ni partagees, ni revendues, ni utilisees a des fins publicitaires.<br><br>
 
   <b style="color:var(--text)">Conservation</b><br>
-  Les données sont conservées tant que le compte existe. Tu peux les supprimer intégralement et à tout moment depuis l'onglet Profil (« Supprimer mes données et mon compte »).<br><br>
+  Les donnees sont conservees tant que le compte existe. Tu peux les supprimer integralement et a tout moment depuis l'onglet Profil (Supprimer mes donnees et mon compte).<br><br>
 
   <b style="color:var(--text)">Cookies</b><br>
-  Aucun cookie publicitaire ni traceur analytics. Seul un jeton de session technique (géré par Supabase Auth) est utilisé pour te garder connecté.<br><br>
+  Aucun cookie publicitaire ni traceur analytics. Seul un jeton de session technique (gere par Supabase Auth) est utilise pour te garder connecte.<br><br>
 
   <b style="color:var(--text)">Tes droits</b><br>
-  Accès, rectification et suppression de tes données sont disponibles directement dans l'onglet Profil. Pour toute autre demande, un moyen de contact sera publié ici avec l'identité de l'éditeur.
+  Acces, rectification et suppression de tes donnees sont disponibles directement dans l'onglet Profil. Pour toute autre demande, un moyen de contact sera publie ici avec l'identite de l'editeur.
 </div>
 
 <div id="methodsBox" class="card hide" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
-  <b style="color:var(--text)">Méthodes de calcul</b><br><br>
+  <b style="color:var(--text)">Methodes de calcul</b><br><br>
 
-  <b style="color:var(--text)">Métabolisme de base (BMR)</b><br>
-  Calculé par la formule de <b>Mifflin-St Jeor</b> (référence standard, plus fiable que Harris-Benedict) à partir du poids, de la taille, de l'âge et du sexe. Si tu renseignes ton % de masse grasse, la formule de <b>Katch-McArdle</b> prend le relais — elle se base sur la masse maigre réelle et devient plus précise si tu connais ce chiffre.<br><br>
+  <b style="color:var(--text)">Metabolisme de base (BMR)</b><br>
+  Calcule par la formule de <b>Mifflin-St Jeor</b> (reference standard, plus fiable que Harris-Benedict) a partir du poids, de la taille, de l'age et du sexe. Si tu renseignes ton % de masse grasse, la formule de <b>Katch-McArdle</b> prend le relais - elle se base sur la masse maigre reelle et devient plus precise si tu connais ce chiffre.<br><br>
 
-  <b style="color:var(--text)">Activité hors sport (NEAT)</b><br>
-  Le BMR est multiplié selon ton niveau déclaré : sédentaire ×1,2 · léger ×1,35 · actif ×1,5. Ça couvre les dépenses du quotidien hors séances (marche, tâches, position debout...).<br><br>
+  <b style="color:var(--text)">Activite hors sport (NEAT)</b><br>
+  Le BMR est multiplie selon ton niveau declare : sedentaire x1,2 - leger x1,35 - actif x1,5. Ca couvre les depenses du quotidien hors seances (marche, taches, position debout...).<br><br>
 
-  <b style="color:var(--text)">Dépense sportive</b><br>
-  Ajoutée séparément : (séances/semaine × durée moyenne × kcal/minute selon intensité) ÷ 7. Intensité légère ≈ 5 kcal/min, modérée ≈ 7, élevée ≈ 9 — des repères usuels, pas une mesure réelle de ta dépense (un capteur cardio ferait mieux, mais demande du matériel).<br><br>
+  <b style="color:var(--text)">Depense sportive</b><br>
+  Ajoutee separement : (seances/semaine x duree moyenne x kcal/minute selon intensite) / 7. Intensite legere ~5 kcal/min, moderee ~7, elevee ~9 - des reperes usuels, pas une mesure reelle de ta depense (un capteur cardio ferait mieux, mais demande du materiel).<br><br>
 
   <b style="color:var(--text)">Maintenance</b><br>
-  BMR × NEAT + dépense sportive quotidienne moyenne. C'est l'estimation du nombre de calories qui te maintiendrait à poids stable.<br><br>
+  BMR x NEAT + depense sportive quotidienne moyenne. C'est l'estimation du nombre de calories qui te maintiendrait a poids stable.<br><br>
 
   <b style="color:var(--text)">Cible calorique</b><br>
-  Maintenance × un multiplicateur selon ton objectif et son intensité :<br>
-  • Sèche : douce ×0,92 (−8%) · modérée ×0,85 (−15%) · agressive ×0,78 (−22%)<br>
-  • Maintien : ×1,0 quelle que soit l'intensité<br>
-  • Prise de masse : douce ×1,05 (+5%) · modérée ×1,10 (+10%) · agressive ×1,15 (+15%)<br><br>
+  Maintenance x un multiplicateur selon ton objectif et son intensite :<br>
+  - Seche : douce x0,92 (-8%) - moderee x0,85 (-15%) - agressive x0,78 (-22%)<br>
+  - Maintien : x1,0 quelle que soit l'intensite<br>
+  - Prise de masse : douce x1,05 (+5%) - moderee x1,10 (+10%) - agressive x1,15 (+15%)<br><br>
 
-  <b style="color:var(--text)">Protéines, lipides, glucides</b><br>
-  Protéines fixées à <b>1,8g/kg de poids</b> (haut de la fourchette recommandée pour préserver le muscle en déficit, cf. littérature sur la recomposition corporelle). Lipides fixés à <b>0,8g/kg</b> (couvre les besoins hormonaux). Les glucides absorbent le reste des calories cibles une fois protéines et lipides retirés.<br><br>
+  <b style="color:var(--text)">Proteines, lipides, glucides</b><br>
+  Proteines fixees a <b>1,8g/kg de poids</b> (haut de la fourchette recommandee pour preserver le muscle en deficit, cf. litterature sur la recomposition corporelle). Lipides fixes a <b>0,8g/kg</b> (couvre les besoins hormonaux). Les glucides absorbent le reste des calories cibles une fois proteines et lipides retires.<br><br>
 
   <b style="color:var(--text)">Couleurs des anneaux (vert/jaune/rouge)</b><br>
-  Calculées par rapport à ta cible du jour, avec une marge de tolérance : vert si tu es proche de la cible, jaune si tu t'en écartes modérément, rouge au-delà. Les seuils exacts varient par macro (les calories et glucides ont une fourchette plus stricte que les lipides, par exemple) et sont exprimés en g/kg de poids de corps pour s'adapter à ta morphologie.<br><br>
+  Calculees par rapport a ta cible du jour, avec une marge de tolerance : vert si tu es proche de la cible, jaune si tu t'en ecartes moderement, rouge au-dela. Les seuils exacts varient par macro (les calories et glucides ont une fourchette plus stricte que les lipides, par exemple) et sont exprimes en g/kg de poids de corps pour s'adapter a ta morphologie.<br><br>
 
   <b style="color:var(--text)">Ajustement automatique</b><br>
-  Quand tu notes ton poids régulièrement, l'app compare ta progression réelle (sur au moins 7 jours) à la progression attendue selon ton déficit/surplus calculé (base : 1kg de graisse ≈ 7700 kcal). Si l'écart est significatif et que ça fait au moins 14 jours depuis le dernier ajustement, ta cible calorique est corrigée automatiquement de ±3 à 5% pour recaler la trajectoire sur ton objectif.<br><br>
+  Quand tu notes ton poids regulierement, l'app compare ta progression reelle (sur au moins 7 jours) a la progression attendue selon ton deficit/surplus calcule (base : 1kg de graisse ~ 7700 kcal). Si l'ecart est significatif et que ca fait au moins 14 jours depuis le dernier ajustement, ta cible calorique est corrigee automatiquement de +/-3 a 5% pour recaler la trajectoire sur ton objectif.<br><br>
 
-  <span style="font-style:italic">Ce sont des formules de référence généralistes, pas un avis médical. Elles donnent une estimation de départ à affiner avec tes résultats réels dans le temps.</span>
+  <span style="font-style:italic">Ce sont des formules de reference generalistes, pas un avis medical. Elles donnent une estimation de depart a affiner avec tes resultats reels dans le temps.</span>
 </div>
 
 </div>
@@ -457,11 +457,11 @@ let user=null, profile=null, pending=null;
 
 async function signup(){
   if(!document.getElementById('consentData').checked){
-    return alert('Coche la case de consentement sur le stockage de tes données avant de créer un compte.');
+    return alert('Coche la case de consentement sur le stockage de tes donnees avant de creer un compte.');
   }
   const {data,error}=await sb.auth.signUp({email:val('email'),password:val('pass')});
   if(error) return alert(error.message);
-  alert('Compte créé. Vérifie ton email si confirmation demandée, puis connecte-toi.');
+  alert('Compte cree. Verifie ton email si confirmation demandee, puis connecte-toi.');
 }
 async function login(){
   const {data,error}=await sb.auth.signInWithPassword({email:val('email'),password:val('pass')});
@@ -499,15 +499,11 @@ async function boot(){
     document.getElementById('app').classList.remove('hide');
     document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
     document.getElementById('avatarBtn').classList.remove('hide');
-    document.getElementById('avatarImg').src=p.avatar_url||'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%233b3c3e%27/%3E%3Ctext x=%2720%27 y=%2726%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27%23a7a5a0%27%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+    document.getElementById('avatarImg').src=p.avatar_url||'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="%233b3c3e"/></svg>';
     updateProfileWarnBadge();
     loadToday();
   }
 }
-// Le point d'exclamation jaune sur l'avatar signale qu'il manque des
-// infos essentielles au calcul des cibles (poids/taille/âge). Il disparaît
-// dès que ces champs sont correctement remplis — recalculé à chaque
-// chargement/sauvegarde de profil.
 function isProfileIncomplete(p){
   return !p || !p.weight_kg || p.weight_kg<=0 || !p.height_cm || p.height_cm<=0 || !p.age || p.age<=0;
 }
@@ -518,7 +514,9 @@ function updateProfileWarnBadge(){
 }
 
 function computeTargets(prof){
-  const {weight_kg:w,height_cm:h,age:a,sex,body_fat_pct:bf,neat_level,sessions_per_week:sw,session_duration_min:sd,intensity,goal,aggressiveness:ag}=prof;
+  const w=prof.weight_kg, h=prof.height_cm, a=prof.age, sex=prof.sex, bf=prof.body_fat_pct;
+  const neat_level=prof.neat_level, sw=prof.sessions_per_week, sd=prof.session_duration_min;
+  const intensity=prof.intensity, goal=prof.goal, ag=prof.aggressiveness;
   const bmr = bf ? 370 + 21.6*(w*(1-bf/100)) : (sex==='h' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161);
   const neatMult = {sed:1.2, leger:1.35, actif:1.5}[neat_level]||1.2;
   const intensityKcalMin = {low:5, med:7, high:9}[intensity]||7;
@@ -543,13 +541,13 @@ async function saveProfile(){
     intensity:val('intensity'), goal:val('goal'), aggressiveness:val('aggressiveness')
   };
   const t=computeTargets(prof);
-  const {error}=await sb.from('profiles').upsert({id:user.id,...prof,...t,last_adjust_date:new Date().toISOString().slice(0,10)});
-  if(checkErr(error,'création profil')) return;
-  profile={...prof,...t};
+  const {error}=await sb.from('profiles').upsert(Object.assign({id:user.id}, prof, t, {last_adjust_date:new Date().toISOString().slice(0,10)}));
+  if(checkErr(error,'creation profil')) return;
+  profile=Object.assign({}, prof, t);
   document.getElementById('profileSetup').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
   document.getElementById('avatarBtn').classList.remove('hide');
-  document.getElementById('avatarImg').src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%233b3c3e%27/%3E%3Ctext x=%2720%27 y=%2726%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27%23a7a5a0%27%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+  document.getElementById('avatarImg').src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="%233b3c3e"/></svg>';
   updateProfileWarnBadge();
   document.getElementById('mealDate').value=new Date().toISOString().slice(0,10);
   loadToday();
@@ -557,9 +555,9 @@ async function saveProfile(){
 async function changeGoal(goal){
   profile.goal=goal;
   const t=computeTargets(profile);
-  const {error}=await sb.from('profiles').update({goal,...t}).eq('id',user.id);
+  const {error}=await sb.from('profiles').update(Object.assign({goal:goal}, t)).eq('id',user.id);
   if(checkErr(error,'changement objectif')) return;
-  profile={...profile,...t};
+  profile=Object.assign({}, profile, t);
   loadToday();
 }
 async function loadProfilTab(){
@@ -574,7 +572,7 @@ async function loadProfilTab(){
   document.getElementById('pIntensity').value=profile.intensity;
   document.getElementById('pGoal').value=profile.goal;
   document.getElementById('pAggressiveness').value=profile.aggressiveness;
-  document.getElementById('targetSummary').innerHTML=`Maintenance ~${profile.maintenance} kcal<br>Cible : ${profile.kcal_target} kcal — P${profile.protein_target}g / G${profile.carb_target}g / L${profile.fat_target}g`;
+  document.getElementById('targetSummary').innerHTML='Maintenance ~'+profile.maintenance+' kcal<br>Cible : '+profile.kcal_target+' kcal - P'+profile.protein_target+'g / G'+profile.carb_target+'g / L'+profile.fat_target+'g';
   const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
   drawWeightChart(logs||[]);
   updateTargetWeightInfo(logs||[]);
@@ -585,16 +583,17 @@ async function loadProfilTab(){
   renderBodyfatLogList(bfLogs||[]);
 }
 async function deleteAccount(){
-  if(!confirm('Supprimer définitivement toutes tes données (profil, repas, séances, historique de poids) ? Cette action est irréversible.')) return;
-  if(!confirm('Vraiment sûr ? Il n\'y a aucun retour en arrière possible.')) return;
+  if(!confirm('Supprimer definitivement toutes tes donnees (profil, repas, seances, historique de poids) ? Cette action est irreversible.')) return;
+  if(!confirm('Vraiment sur ? Il n a aucun retour en arriere possible.')) return;
   const uid=user.id;
-  for(const t of ['meals','workout_logs','weight_logs','program_exercises','sessions']){
-    const {error}=await sb.from(t).delete().eq('user_id',uid);
-    if(checkErr(error,'suppression '+t)) return;
+  const tables=['meals','workout_logs','weight_logs','program_exercises','sessions'];
+  for(let i=0;i<tables.length;i++){
+    const {error}=await sb.from(tables[i]).delete().eq('user_id',uid);
+    if(checkErr(error,'suppression '+tables[i])) return;
   }
   const {error:profErr}=await sb.from('profiles').delete().eq('id',uid);
   if(checkErr(profErr,'suppression profil')) return;
-  alert('Tes données ont été supprimées. Ton compte de connexion (email) existe techniquement encore côté authentification mais ne contient plus aucune donnée — contacte-moi si tu veux qu\'il soit aussi purgé définitivement.');
+  alert('Tes donnees ont ete supprimees. Ton compte de connexion (email) existe techniquement encore cote authentification mais ne contient plus aucune donnee - contacte-moi si tu veux qu il soit aussi purge definitivement.');
   await sb.auth.signOut();
   location.reload();
 }
@@ -602,10 +601,10 @@ async function uploadAvatar(file){
   if(!file) return;
   const img=new Image();
   const reader=new FileReader();
-  reader.onload=e=>{ img.src=e.target.result; };
+  reader.onload=function(e){ img.src=e.target.result; };
   reader.readAsDataURL(file);
-  await new Promise(res=>reader.onloadend=res);
-  await new Promise(res=>img.onload=res);
+  await new Promise(function(res){reader.onloadend=res;});
+  await new Promise(function(res){img.onload=res;});
   const canvas=document.createElement('canvas');
   canvas.width=160; canvas.height=160;
   const ctx=canvas.getContext('2d');
@@ -625,32 +624,32 @@ async function updateProfile(){
     intensity:val('pIntensity'), goal:val('pGoal'), aggressiveness:val('pAggressiveness')
   };
   const t=computeTargets(prof);
-  const {data,error}=await sb.from('profiles').update({...prof,...t}).eq('id',user.id).select();
+  const {data,error}=await sb.from('profiles').update(Object.assign({}, prof, t)).eq('id',user.id).select();
   if(error){
     alert('Erreur de sauvegarde : '+error.message);
     console.error('updateProfile error:', error);
     return;
   }
   if(!data || data.length===0){
-    alert('Aucune ligne mise à jour — la policy RLS "UPDATE" sur la table profiles bloque probablement l\'écriture. Vérifie dans Supabase (Authentication > Policies > profiles) qu\'une policy autorise UPDATE avec auth.uid() = id, en using ET en with check.');
-    console.error('updateProfile: 0 rows affected — RLS blocking update likely.');
+    alert('Aucune ligne mise a jour - la policy RLS UPDATE sur la table profiles bloque probablement l ecriture. Verifie dans Supabase (Authentication > Policies > profiles) qu une policy autorise UPDATE avec auth.uid() = id, en using ET en with check.');
+    console.error('updateProfile: 0 rows affected - RLS blocking update likely.');
     return;
   }
-  profile={...profile,...prof,...t};
+  profile=Object.assign({}, profile, prof, t);
   updateProfileWarnBadge();
   loadProfilTab();
   loadToday();
-  alert('Profil mis à jour.');
+  alert('Profil mis a jour.');
 }
 let weightChart=null;
 function drawWeightChart(logs){
   const ctx=document.getElementById('weightChart');
   if(weightChart) weightChart.destroy();
-  const datasets=[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}];
+  const datasets=[{label:'Poids (kg)',data:logs.map(function(l){return l.weight;}),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}];
   if(profile.target_weight_kg && logs.length){
     datasets.push({
       label:'Objectif',
-      data:logs.map(()=>profile.target_weight_kg),
+      data:logs.map(function(){return profile.target_weight_kg;}),
       borderColor:'rgba(237,235,230,.45)',
       borderDash:[6,5],
       pointRadius:0,
@@ -659,8 +658,8 @@ function drawWeightChart(logs){
     });
   }
   weightChart=new Chart(ctx,{type:'line',data:{
-    labels:logs.map(l=>l.date),
-    datasets
+    labels:logs.map(function(l){return l.date;}),
+    datasets:datasets
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
 function updateTargetWeightInfo(logs){
@@ -668,19 +667,19 @@ function updateTargetWeightInfo(logs){
   if(!box) return;
   document.getElementById('targetWeightVal').value=profile.target_weight_kg||'';
   if(!profile.target_weight_kg){ box.textContent=''; return; }
-  if(!logs || !logs.length){ box.textContent=`Objectif : ${profile.target_weight_kg}kg`; return; }
+  if(!logs || !logs.length){ box.textContent='Objectif : '+profile.target_weight_kg+'kg'; return; }
   const current=logs[logs.length-1].weight;
   const diff=Math.round((current-profile.target_weight_kg)*10)/10;
-  if(Math.abs(diff)<0.1){ box.textContent=`🎯 Objectif atteint (${profile.target_weight_kg}kg) !`; return; }
-  box.textContent=diff>0
-    ? `Objectif ${profile.target_weight_kg}kg — encore ${diff}kg à perdre`
-    : `Objectif ${profile.target_weight_kg}kg — encore ${Math.abs(diff)}kg à prendre`;
+  if(Math.abs(diff)<0.1){ box.textContent='Objectif atteint ('+profile.target_weight_kg+'kg) !'; return; }
+  box.textContent = diff>0
+    ? ('Objectif '+profile.target_weight_kg+'kg - encore '+diff+'kg a perdre')
+    : ('Objectif '+profile.target_weight_kg+'kg - encore '+Math.abs(diff)+'kg a prendre');
 }
 async function saveTargetWeight(){
   const tw=+val('targetWeightVal');
   if(!tw) return;
   const {error}=await sb.from('profiles').update({target_weight_kg:tw}).eq('id',user.id);
-  if(checkErr(error,'définition poids cible')) return;
+  if(checkErr(error,'definition poids cible')) return;
   profile.target_weight_kg=tw;
   loadProfilTab();
 }
@@ -688,11 +687,11 @@ let bodyfatChart=null;
 function drawBodyfatChart(logs){
   const ctx=document.getElementById('bodyfatChart');
   if(bodyfatChart) bodyfatChart.destroy();
-  const datasets=[{label:'% masse grasse',data:logs.map(l=>l.bodyfat_pct),borderColor:'#8fb797',backgroundColor:'rgba(143,183,151,.15)',tension:.2,fill:true}];
+  const datasets=[{label:'% masse grasse',data:logs.map(function(l){return l.bodyfat_pct;}),borderColor:'#8fb797',backgroundColor:'rgba(143,183,151,.15)',tension:.2,fill:true}];
   if(profile.target_bodyfat_pct && logs.length){
     datasets.push({
       label:'Objectif',
-      data:logs.map(()=>profile.target_bodyfat_pct),
+      data:logs.map(function(){return profile.target_bodyfat_pct;}),
       borderColor:'rgba(237,235,230,.45)',
       borderDash:[6,5],
       pointRadius:0,
@@ -701,8 +700,8 @@ function drawBodyfatChart(logs){
     });
   }
   bodyfatChart=new Chart(ctx,{type:'line',data:{
-    labels:logs.map(l=>l.date),
-    datasets
+    labels:logs.map(function(l){return l.date;}),
+    datasets:datasets
   },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
 function updateTargetBodyfatInfo(logs){
@@ -710,19 +709,19 @@ function updateTargetBodyfatInfo(logs){
   if(!box) return;
   document.getElementById('targetBodyfatVal').value=profile.target_bodyfat_pct||'';
   if(!profile.target_bodyfat_pct){ box.textContent=''; return; }
-  if(!logs || !logs.length){ box.textContent=`Objectif : ${profile.target_bodyfat_pct}%`; return; }
+  if(!logs || !logs.length){ box.textContent='Objectif : '+profile.target_bodyfat_pct+'%'; return; }
   const current=logs[logs.length-1].bodyfat_pct;
   const diff=Math.round((current-profile.target_bodyfat_pct)*10)/10;
-  if(Math.abs(diff)<0.1){ box.textContent=`🎯 Objectif atteint (${profile.target_bodyfat_pct}%) !`; return; }
-  box.textContent=diff>0
-    ? `Objectif ${profile.target_bodyfat_pct}% — encore ${diff}% à perdre`
-    : `Objectif ${profile.target_bodyfat_pct}% — encore ${Math.abs(diff)}% à gagner`;
+  if(Math.abs(diff)<0.1){ box.textContent='Objectif atteint ('+profile.target_bodyfat_pct+'%) !'; return; }
+  box.textContent = diff>0
+    ? ('Objectif '+profile.target_bodyfat_pct+'% - encore '+diff+'% a perdre')
+    : ('Objectif '+profile.target_bodyfat_pct+'% - encore '+Math.abs(diff)+'% a gagner');
 }
 async function saveTargetBodyfat(){
   const tb=+val('targetBodyfatVal');
   if(!tb) return;
   const {error}=await sb.from('profiles').update({target_bodyfat_pct:tb}).eq('id',user.id);
-  if(checkErr(error,'définition masse grasse cible')) return;
+  if(checkErr(error,'definition masse grasse cible')) return;
   profile.target_bodyfat_pct=tb;
   loadProfilTab();
 }
@@ -736,26 +735,29 @@ async function logBodyfat(){
   loadProfilTab();
   loadToday();
 }
-// Resynchronise profiles.body_fat_pct (et les cibles calculées) sur l'entrée
-// la plus récente de bodyfat_logs, après TOUT changement (ajout, modif,
-// suppression). Si plus aucune entrée, revient à null (BMR retombe sur
-// Mifflin-St Jeor au lieu de Katch-McArdle).
 async function syncBodyfatToProfile(){
   const {data:logs}=await sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date',{ascending:false}).limit(1);
   const latest = logs && logs.length ? logs[0].bodyfat_pct : null;
-  const updatedProf={...profile, body_fat_pct:latest};
+  const updatedProf=Object.assign({}, profile, {body_fat_pct:latest});
   const t=computeTargets(updatedProf);
-  const {error}=await sb.from('profiles').update({body_fat_pct:latest,...t}).eq('id',user.id);
+  const {error}=await sb.from('profiles').update(Object.assign({body_fat_pct:latest}, t)).eq('id',user.id);
   if(checkErr(error,'resynchro masse grasse')) return;
-  profile={...profile,body_fat_pct:latest,...t};
+  profile=Object.assign({}, profile, {body_fat_pct:latest}, t);
 }
 function renderBodyfatLogList(logs){
   const box=document.getElementById('bodyfatLogList');
   if(!box) return;
-  box.innerHTML=logs.length ? [...logs].reverse().map(l=>`<div class="mealRow">${l.date} — ${l.bodyfat_pct}%
-    <a href="#" onclick="editBodyfatLog('${l.id}',${l.bodyfat_pct});return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
-    <a href="#" onclick="deleteBodyfatLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
-  </div>`).join('') : '';
+  if(!logs.length){ box.innerHTML=''; return; }
+  const rev=logs.slice().reverse();
+  let html='';
+  for(let i=0;i<rev.length;i++){
+    const l=rev[i];
+    html += '<div class="mealRow">'+l.date+' - '+l.bodyfat_pct+'%'
+      + ' <a href="#" onclick="editBodyfatLog(\''+l.id+'\','+l.bodyfat_pct+');return false" class="iconLink" style="color:var(--brass)" title="Modifier">'+ICON_EDIT+'</a>'
+      + ' <a href="#" onclick="deleteBodyfatLog(\''+l.id+'\');return false" class="iconLink" style="color:#ef4444" title="Supprimer">'+ICON_DELETE+'</a>'
+      + '</div>';
+  }
+  box.innerHTML=html;
 }
 async function editBodyfatLog(id, oldVal){
   const nv=+prompt('Nouvelle valeur (% masse grasse) :', oldVal);
@@ -767,7 +769,7 @@ async function editBodyfatLog(id, oldVal){
   loadToday();
 }
 async function deleteBodyfatLog(id){
-  if(!confirm('Supprimer cette entrée de masse grasse ?')) return;
+  if(!confirm('Supprimer cette entree de masse grasse ?')) return;
   const {error}=await sb.from('bodyfat_logs').delete().eq('id',id);
   if(checkErr(error,'suppression masse grasse')) return;
   await syncBodyfatToProfile();
@@ -786,10 +788,17 @@ async function logWeight(){
 function renderWeightLogList(logs){
   const box=document.getElementById('weightLogList');
   if(!box) return;
-  box.innerHTML=logs.length ? [...logs].reverse().map(l=>`<div class="mealRow">${l.date} — ${l.weight}kg
-    <a href="#" onclick="editWeightLog('${l.id}',${l.weight});return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
-    <a href="#" onclick="deleteWeightLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
-  </div>`).join('') : '';
+  if(!logs.length){ box.innerHTML=''; return; }
+  const rev=logs.slice().reverse();
+  let html='';
+  for(let i=0;i<rev.length;i++){
+    const l=rev[i];
+    html += '<div class="mealRow">'+l.date+' - '+l.weight+'kg'
+      + ' <a href="#" onclick="editWeightLog(\''+l.id+'\','+l.weight+');return false" class="iconLink" style="color:var(--brass)" title="Modifier">'+ICON_EDIT+'</a>'
+      + ' <a href="#" onclick="deleteWeightLog(\''+l.id+'\');return false" class="iconLink" style="color:#ef4444" title="Supprimer">'+ICON_DELETE+'</a>'
+      + '</div>';
+  }
+  box.innerHTML=html;
 }
 async function editWeightLog(id, oldVal){
   const nv=+prompt('Nouveau poids (kg) :', oldVal);
@@ -799,7 +808,7 @@ async function editWeightLog(id, oldVal){
   loadProfilTab();
 }
 async function deleteWeightLog(id){
-  if(!confirm('Supprimer cette entrée de poids ?')) return;
+  if(!confirm('Supprimer cette entree de poids ?')) return;
   const {error}=await sb.from('weight_logs').delete().eq('id',id);
   if(checkErr(error,'suppression poids')) return;
   loadProfilTab();
@@ -807,9 +816,13 @@ async function deleteWeightLog(id){
 async function checkAutoAdjust(){
   const {data:logs}=await sb.from('weight_logs').select('*').eq('user_id',user.id).order('date');
   if(!logs || logs.length<2) return;
-  const last=logs[logs.length-1], daysSinceAdjust=profile.last_adjust_date ? (new Date(last.date)-new Date(profile.last_adjust_date))/86400000 : 999;
+  const last=logs[logs.length-1];
+  const daysSinceAdjust=profile.last_adjust_date ? (new Date(last.date)-new Date(profile.last_adjust_date))/86400000 : 999;
   if(daysSinceAdjust<14) return;
-  const ref=logs.find(l=>(new Date(last.date)-new Date(l.date))/86400000>=10) || logs[0];
+  let ref=logs[0];
+  for(let i=0;i<logs.length;i++){
+    if((new Date(last.date)-new Date(logs[i].date))/86400000>=10){ ref=logs[i]; break; }
+  }
   const days=(new Date(last.date)-new Date(ref.date))/86400000;
   if(days<7) return;
   const actualRateWeek=((last.weight-ref.weight)/days)*7;
@@ -826,51 +839,49 @@ async function checkAutoAdjust(){
     const {error}=await sb.from('profiles').update({kcal_target:newKcal,carb_target:carbT,last_adjust_date:last.date}).eq('id',user.id);
     if(checkErr(error,'ajustement auto calories')) return;
     profile.kcal_target=newKcal; profile.carb_target=carbT; profile.last_adjust_date=last.date;
-    alert(`Cible calorique ajustée automatiquement à ${newKcal} kcal (progression réelle : ${actualRateWeek.toFixed(2)}kg/sem).`);
+    alert('Cible calorique ajustee automatiquement a '+newKcal+' kcal (progression reelle : '+actualRateWeek.toFixed(2)+'kg/sem).');
     loadToday();
   } else {
     const {error}=await sb.from('profiles').update({last_adjust_date:last.date}).eq('id',user.id);
-    if(checkErr(error,'mise à jour date ajustement')) return;
+    if(checkErr(error,'mise a jour date ajustement')) return;
     profile.last_adjust_date=last.date;
   }
 }
 
 let searchTimeout;
-document.getElementById('foodSearch').addEventListener('input',e=>{
+document.getElementById('foodSearch').addEventListener('input',function(e){
   clearTimeout(searchTimeout);
   const q=e.target.value;
-  if(q.length<3) return document.getElementById('results').innerHTML='';
-  searchTimeout=setTimeout(()=>searchFood(q),400);
+  if(q.length<3){ document.getElementById('results').innerHTML=''; return; }
+  searchTimeout=setTimeout(function(){searchFood(q);},400);
 });
 async function searchFood(q){
   const box=document.getElementById('results');
   box.innerHTML='';
 
-  // 1. Aliments génériques (table locale food_items) — prioritaires car fiables
-  const {data:local}=await sb.from('food_items').select('*').ilike('name', `%${q}%`).limit(8);
-  (local||[]).forEach(f=>{
+  const {data:local}=await sb.from('food_items').select('*').ilike('name', '%'+q+'%').limit(8);
+  (local||[]).forEach(function(f){
     const n={'energy-kcal_100g':f.kcal_100g,'proteins_100g':f.protein_100g,'carbohydrates_100g':f.carbs_100g,'fat_100g':f.fat_100g};
     const div=document.createElement('div');
-    div.textContent=`${f.name} — ${Math.round(f.kcal_100g)}kcal/100g · générique`;
-    div.onclick=()=>openQtyBox(f.name,n);
+    div.textContent=f.name+' - '+Math.round(f.kcal_100g)+'kcal/100g - generique';
+    div.onclick=function(){openQtyBox(f.name,n);};
     box.appendChild(div);
   });
 
-  // 2. OpenFoodFacts (produits de marque), en complément — trié par popularité
-  const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=8&sort_by=unique_scans_n&fields=product_name,nutriments`);
+  const r=await fetch('https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&json=1&page_size=8&sort_by=unique_scans_n&fields=product_name,nutriments');
   const data=await r.json();
-  (data.products||[]).forEach(p=>{
+  (data.products||[]).forEach(function(p){
     if(!p.product_name || !p.nutriments) return;
     const n=p.nutriments;
     const div=document.createElement('div');
-    div.textContent=`${p.product_name} — ${Math.round(n['energy-kcal_100g']||0)}kcal/100g`;
-    div.onclick=()=>openQtyBox(p.product_name,n);
+    div.textContent=p.product_name+' - '+Math.round(n['energy-kcal_100g']||0)+'kcal/100g';
+    div.onclick=function(){openQtyBox(p.product_name,n);};
     box.appendChild(div);
   });
 }
 
 function openQtyBox(name,n){
-  pending={name,n};
+  pending={name:name,n:n};
   document.getElementById('qtyLabel').textContent=name;
   document.getElementById('qtyBox').classList.remove('hide');
   document.getElementById('qtyVal').focus();
@@ -882,9 +893,9 @@ async function confirmAdd(){
   if(!pending) return;
   const qty=+val('qtyVal'), unit=val('qtyUnit');
   const grams=qty*UNIT_G[unit];
-  const f=grams/100, {name,n}=pending;
+  const f=grams/100, name=pending.name, n=pending.n;
   const date=val('mealDate')||new Date().toISOString().slice(0,10);
-  const {error}=await sb.from('meals').insert({user_id:user.id,date,description:`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
+  const {error}=await sb.from('meals').insert({user_id:user.id,date:date,description:name+' ('+qty+(unit==='g'?'g':unit.toUpperCase())+')',
     p:Math.round((n.proteins_100g||0)*f), c:Math.round((n.carbohydrates_100g||0)*f),
     f:Math.round((n.fat_100g||0)*f), kcal:Math.round((n['energy-kcal_100g']||0)*f)});
   if(checkErr(error,'ajout repas')) return;
@@ -910,7 +921,7 @@ function updateCustomFoodMode(){
 }
 async function confirmCustomFood(){
   const name=val('cfName').trim();
-  if(!name) return alert('Donne un nom à l\'aliment avant d\'ajouter.');
+  if(!name){ alert('Donne un nom a l aliment avant d ajouter.'); return; }
   const kcalIn=+val('cfKcal')||0, pIn=+val('cfP')||0, cIn=+val('cfC')||0, fIn=+val('cfF')||0;
   let finalKcal, finalP, finalC, finalF, desc;
   if(val('cfMode')==='100g'){
@@ -918,14 +929,14 @@ async function confirmCustomFood(){
     const grams=qty*UNIT_G[unit];
     const ratio=grams/100;
     finalKcal=Math.round(kcalIn*ratio); finalP=Math.round(pIn*ratio); finalC=Math.round(cIn*ratio); finalF=Math.round(fIn*ratio);
-    desc=`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`;
+    desc=name+' ('+qty+(unit==='g'?'g':unit.toUpperCase())+')';
   } else {
     finalKcal=Math.round(kcalIn); finalP=Math.round(pIn); finalC=Math.round(cIn); finalF=Math.round(fIn);
     desc=name;
   }
   const date=val('mealDate')||new Date().toISOString().slice(0,10);
-  const {error}=await sb.from('meals').insert({user_id:user.id,date,description:desc,p:finalP,c:finalC,f:finalF,kcal:finalKcal});
-  if(checkErr(error,'ajout aliment personnalisé')) return;
+  const {error}=await sb.from('meals').insert({user_id:user.id,date:date,description:desc,p:finalP,c:finalC,f:finalF,kcal:finalKcal});
+  if(checkErr(error,'ajout aliment personnalise')) return;
   document.getElementById('cfName').value='';
   document.getElementById('cfKcal').value='';
   document.getElementById('cfP').value='';
@@ -939,7 +950,7 @@ async function editMeal(id){
   const m=mealsById[id];
   if(!m) return;
   const nd=prompt('Description :',m.description); if(nd===null) return;
-  const np=+prompt('Protéines (g) :',m.p); const nc=+prompt('Glucides (g) :',m.c);
+  const np=+prompt('Proteines (g) :',m.p); const nc=+prompt('Glucides (g) :',m.c);
   const nf=+prompt('Lipides (g) :',m.f); const nk=+prompt('Calories :',m.kcal);
   const {error}=await sb.from('meals').update({description:nd,p:np,c:nc,f:nf,kcal:nk}).eq('id',id);
   if(checkErr(error,'modification repas')) return;
@@ -949,7 +960,7 @@ async function editMeal(id){
 async function loadToday(){
   const {data:meals}=await sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at');
   mealsById={};
-  (meals||[]).forEach(m=>{ mealsById[m.id]=m; });
+  (meals||[]).forEach(function(m){ mealsById[m.id]=m; });
   renderNutriDays(meals||[]);
 }
 
@@ -968,37 +979,47 @@ function colorClass(val,zone,type){
 }
 function formatDateFR(d){
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const [y,m,day]=d.split('-');
+  const parts=d.split('-');
+  const y=parts[0], m=parts[1], day=parts[2];
   const dateObj=new Date(+y,+m-1,+day);
-  return `${days[dateObj.getDay()]} ${day}/${m}/${y}`;
+  return days[dateObj.getDay()]+' '+day+'/'+m+'/'+y;
 }
 function ring(val,ringMax,cls,target,danger,unit,label){
   const r=26,c=2*Math.PI*r,pct=Math.max(0,Math.min(100,val/ringMax*100)),off=c-(pct/100)*c;
   const fc=danger?'d':cls;
-  return `<div class="ringCol"><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="${r}"></circle><circle class="ringFill ${fc}" cx="32" cy="32" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"></circle></svg><div class="ringCenter${danger?' dg':''}">${Math.round(val)}${unit}</div></div><div class="ringLabel">${label}</div><div class="ringTarget">/${Math.round(target)}${unit}</div></div>`;
+  return '<div class="ringCol"><div class="ringWrap"><svg viewBox="0 0 64 64"><circle class="ringTrack" cx="32" cy="32" r="'+r+'"></circle><circle class="ringFill '+fc+'" cx="32" cy="32" r="'+r+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"></circle></svg><div class="ringCenter'+(danger?' dg':'')+'">'+Math.round(val)+unit+'</div></div><div class="ringLabel">'+label+'</div><div class="ringTarget">/'+Math.round(target)+unit+'</div></div>';
 }
 function renderNutriDays(meals){
   const z=zones(profile.weight_kg);
   const grouped={};
-  meals.forEach(m=>{ (grouped[m.date]=grouped[m.date]||[]).push(m); });
+  meals.forEach(function(m){ (grouped[m.date]=grouped[m.date]||[]).push(m); });
   const dates=Object.keys(grouped).sort().reverse();
-  document.getElementById('nutriDays').innerHTML = dates.length ? dates.map(d=>{
+  if(!dates.length){
+    document.getElementById('nutriDays').innerHTML='<div class="card"><span style="color:var(--muted)">Aucun repas note</span></div>';
+    return;
+  }
+  let out='';
+  for(let di=0; di<dates.length; di++){
+    const d=dates[di];
     const items=grouped[d];
-    const tot=items.reduce((a,m)=>({p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal}),{p:0,c:0,f:0,k:0});
-    return `<div class="dayCard">
-      <div class="dayHead">${formatDateFR(d)}</div>
-      ${items.map(m=>`<div class="mealRow">${m.description} — P${m.p}/G${m.c}/L${m.f} — ${m.kcal}kcal
-        <a href="#" onclick="editMeal('${m.id}');return false" class="iconLink" style="color:var(--brass)" title="Modifier"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></a>
-        <a href="#" onclick="deleteMeal('${m.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></a>
-      </div>`).join('')}
-      <div class="ringGrid">
-        ${ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal')}
-        ${ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot')}
-        ${ring(tot.c,z.c.tmin*1.3,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')}
-        ${ring(tot.f,z.f.tmin*1.3,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')}
-      </div>
-    </div>`;
-  }).join('') : '<div class="card"><span style="color:var(--muted)">Aucun repas noté</span></div>';
+    const tot=items.reduce(function(a,m){return {p:a.p+m.p,c:a.c+m.c,f:a.f+m.f,k:a.k+m.kcal};},{p:0,c:0,f:0,k:0});
+    let mealsHtml='';
+    for(let mi=0; mi<items.length; mi++){
+      const m=items[mi];
+      mealsHtml += '<div class="mealRow">'+m.description+' - P'+m.p+'/G'+m.c+'/L'+m.f+' - '+m.kcal+'kcal'
+        + ' <a href="#" onclick="editMeal(\''+m.id+'\');return false" class="iconLink" style="color:var(--brass)" title="Modifier">'+ICON_EDIT+'</a>'
+        + ' <a href="#" onclick="deleteMeal(\''+m.id+'\');return false" class="iconLink" style="color:#ef4444" title="Supprimer">'+ICON_DELETE+'</a>'
+        + '</div>';
+    }
+    out += '<div class="dayCard"><div class="dayHead">'+formatDateFR(d)+'</div>'+mealsHtml
+      + '<div class="ringGrid">'
+      + ring(tot.k,z.kcal.target*1.3,colorClass(tot.k,z.kcal,'kcal'),z.kcal.target,tot.k>=z.kcal.ymax,'','Kcal')
+      + ring(tot.p,z.p.ringMax,colorClass(tot.p,z.p,'p'),z.p.target,false,'g','Prot')
+      + ring(tot.c,z.c.tmin*1.3,colorClass(tot.c,z.c,'c'),z.c.tmin,tot.c>=z.c.max,'g','Gluc')
+      + ring(tot.f,z.f.tmin*1.3,colorClass(tot.f,z.f,'c'),z.f.tmin,tot.f>=z.f.max,'g','Lip')
+      + '</div></div>';
+  }
+  document.getElementById('nutriDays').innerHTML=out;
 }
 
 boot();
@@ -1028,8 +1049,8 @@ async function loadProgramTab(){
 async function createSession(){
   const name=val('newSessionName').trim();
   if(!name) return;
-  const {error}=await sb.from('sessions').insert({user_id:user.id,name,order_index:mySessions.length});
-  if(checkErr(error,'création séance')) return;
+  const {error}=await sb.from('sessions').insert({user_id:user.id,name:name,order_index:mySessions.length});
+  if(checkErr(error,'creation seance')) return;
   document.getElementById('newSessionName').value='';
   loadProgramTab();
 }
@@ -1044,18 +1065,127 @@ function toggleInfo(peId){
   document.getElementById('info_'+peId).classList.toggle('hide');
 }
 async function deleteSession(id){
-  if(!confirm('Supprimer cette séance et ses exercices ?')) return;
+  if(!confirm('Supprimer cette seance et ses exercices ?')) return;
   const {error:e1}=await sb.from('program_exercises').delete().eq('session_id',id);
-  if(checkErr(e1,'suppression exercices de la séance')) return;
+  if(checkErr(e1,'suppression exercices de la seance')) return;
   const {error:e2}=await sb.from('sessions').delete().eq('id',id);
-  if(checkErr(e2,'suppression séance')) return;
+  if(checkErr(e2,'suppression seance')) return;
   loadProgramTab();
 }
 function renderLibrary(){
   const q=(val('exoSearch')||'').toLowerCase();
-  const opts=mySessions.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-  document.getElementById('library').innerHTML=allExercises
-    .filter(e=>!q || (e.muscle_group||'').toLowerCase().includes(q) || e.name.toLowerCase().includes(q))
-    .map(e=>`<div class="exoCard"><b>${e.name}</b> <span style="color:var(--muted)">(${e.muscle_group||''})</span><br>${e.description||''}<br><i style="color:var(--muted)">${e.tips||''}</i><br><a href="${e.demo_url||'#'}" target="_blank">Voir la démo</a><br>
-      ${mySessions.length ? `<select id="sel_${e.id}" style="width:auto;display:inline;margin:4px 4px 0 0">${opts}</select><input id="sr_${e.id}" placeholder="4x10-12" style="width:auto;display:inline;margin:4px 4px 0 0"><button style="width:auto;display:inline;padding:4px 8px" onclick="addToProgram('${e.id}')">Ajouter</button>` : '<i style="color:var(--muted)">Crée une séance d\'abord</i>'}
-    </div>`).join
+  const opts=mySessions.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  const filtered=allExercises.filter(function(e){return !q || (e.muscle_group||'').toLowerCase().indexOf(q)>=0 || e.name.toLowerCase().indexOf(q)>=0;});
+  document.getElementById('library').innerHTML = filtered.map(function(e){
+    const addRow = mySessions.length
+      ? '<select id="sel_'+e.id+'" style="width:auto;display:inline;margin:4px 4px 0 0">'+opts+'</select><input id="sr_'+e.id+'" placeholder="4x10-12" style="width:auto;display:inline;margin:4px 4px 0 0"><button style="width:auto;display:inline;padding:4px 8px" onclick="addToProgram(\''+e.id+'\')">Ajouter</button>'
+      : '<i style="color:var(--muted)">Cree une seance d abord</i>';
+    return '<div class="exoCard"><b>'+e.name+'</b> <span style="color:var(--muted)">('+(e.muscle_group||'')+')</span><br>'+(e.description||'')+'<br><i style="color:var(--muted)">'+(e.tips||'')+'</i><br><a href="'+(e.demo_url||'#')+'" target="_blank">Voir la demo</a><br>'+addRow+'</div>';
+  }).join('');
+}
+async function addToProgram(exoId){
+  const sessionId=val('sel_'+exoId);
+  const sr=val('sr_'+exoId)||'3x12';
+  const {error}=await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exoId,session_id:sessionId,sets_reps:sr,order_index:myProgram.length});
+  if(checkErr(error,'ajout exercice au programme')) return;
+  loadProgramTab();
+}
+async function removeFromProgram(id){
+  const {error}=await sb.from('program_exercises').delete().eq('id',id);
+  if(checkErr(error,'retrait exercice du programme')) return;
+  loadProgramTab();
+}
+async function renameSession(id,oldName){
+  const newName=prompt('Renommer la seance :',oldName);
+  if(!newName || newName===oldName) return;
+  const {error}=await sb.from('sessions').update({name:newName}).eq('id',id);
+  if(checkErr(error,'renommage seance')) return;
+  loadProgramTab();
+}
+function renderMyProgram(){
+  if(!mySessions.length){ document.getElementById('myProgram').innerHTML='<span style="color:var(--muted)">Cree ta premiere seance ci-dessus</span>'; return; }
+  document.getElementById('myProgram').innerHTML = mySessions.map(function(s){
+    const exos=myProgram.filter(function(pe){return pe.session_id===s.id;});
+    const exosHtml = exos.length ? exos.map(function(pe){
+      return '<div class="exoCard"><b>'+pe.exercises.name+'</b> - '+pe.sets_reps
+        + ' <a href="#" onclick="toggleInfo(\''+pe.id+'\');return false" style="color:var(--brass);margin-left:6px">info</a>'
+        + ' <a href="#" onclick="removeFromProgram(\''+pe.id+'\');return false" style="float:right;color:#ef4444">Retirer</a>'
+        + '<div id="info_'+pe.id+'" class="hide" style="margin-top:6px;font-size:12px;color:var(--muted)">'+(pe.exercises.description||'')+'<br><i>'+(pe.exercises.tips||'')+'</i><br><a href="'+(pe.exercises.demo_url||'#')+'" target="_blank">Voir la demo</a></div></div>';
+    }).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px 0">Vide</div>';
+    return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">'
+      + '<span style="cursor:pointer" onclick="toggleSession(\''+s.id+'\')">&#9656; <b>'+s.name+'</b> <span style="color:var(--muted);font-size:12px">('+exos.length+')</span></span>'
+      + ' <a href="#" onclick="renameSession(\''+s.id+'\',\''+s.name+'\');return false" style="font-size:11px;color:var(--brass);margin-left:8px">renommer</a>'
+      + '<a href="#" onclick="deleteSession(\''+s.id+'\');return false" style="font-size:11px;color:#ef4444;float:right">supprimer</a>'
+      + '<div id="exos_'+s.id+'" class="hide">'+exosHtml+'</div></div>';
+  }).join('');
+}
+
+let progChart=null, myProgExos=[];
+async function loadSuiviTab(){
+  if(!allExercises.length){
+    const {data:ex}=await sb.from('exercises').select('*');
+    allExercises=ex||[];
+  }
+  if(!myProgram.length){
+    const {data:pe}=await sb.from('program_exercises').select('*, exercises(*)').eq('user_id',user.id);
+    myProgram=pe||[];
+  }
+  const seen={};
+  myProgExos=[];
+  myProgram.forEach(function(pe){
+    if(!seen[pe.exercise_id]){ seen[pe.exercise_id]=true; myProgExos.push(pe.exercises); }
+  });
+  const sel=document.getElementById('logExo');
+  sel.innerHTML = myProgExos.length ? myProgExos.map(function(e){return '<option value="'+e.id+'">'+e.name+'</option>';}).join('') : '<option>Ajoute d abord un exercice a ton programme</option>';
+  if(myProgExos.length) onLogExoChange();
+}
+async function onLogExoChange(){
+  const exoId=val('logExo');
+  if(!exoId) return;
+  const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',exoId).order('date');
+  const last=logs && logs.length ? logs[logs.length-1] : null;
+  document.getElementById('lastWeight').textContent = last ? ('Dernier : '+last.weight+'kg x'+last.sets+' le '+last.date) : 'Aucun historique';
+  drawChart(logs||[]);
+  renderLogHistory(logs||[]);
+}
+function drawChart(logs){
+  const ctx=document.getElementById('progChart');
+  if(progChart) progChart.destroy();
+  progChart=new Chart(ctx,{type:'line',data:{
+    labels:logs.map(function(l){return l.date;}),
+    datasets:[{label:'Poids (kg)',data:logs.map(function(l){return l.weight;}),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
+  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+}
+async function addLog(){
+  const exoId=val('logExo');
+  if(!exoId) return;
+  const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
+    weight:+val('logWeight')||0, sets:+val('logSets')||0, reps:val('logReps')});
+  if(checkErr(error,'ajout resultat seance')) return;
+  document.getElementById('logWeight').value='';
+  document.getElementById('logSets').value='';
+  document.getElementById('logReps').value='';
+  onLogExoChange();
+}
+function renderLogHistory(logs){
+  if(!logs.length){
+    document.getElementById('logHistory').innerHTML='<span style="color:var(--muted)">Aucun historique pour cet exercice</span>';
+    return;
+  }
+  const rev=logs.slice().reverse();
+  let html='';
+  for(let i=0;i<rev.length;i++){
+    const l=rev[i];
+    html += '<div class="exoCard">'+l.date+' - '+l.weight+'kg x'+l.sets+' ('+(l.reps||'')+')</div>';
+  }
+  document.getElementById('logHistory').innerHTML=html;
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body></html>
