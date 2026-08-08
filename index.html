@@ -1,6 +1,13 @@
 <!doctype html><html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>No Pain No Gain</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2b2c2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NPNG">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAEU0lEQVR4nO3dwXHbVhSG0UdNxiWkAG9F1ZNGUkYaST2Sti4gJWSjLDL02LREEcAD3gX+c/aiOJf3wwNlyjq1Yh7PT2+jnwPren15Po1+DhdDn4hlp7WxQWz+jS09t2wdw2bfzOIz1RYxrP4NLD5LrRnCag9s8eltjRC6P6DFZ209Q3jo9UCtWX620XPPupRk8Rll6Wmw+ASw/Iy0dP8WBWD5qWDJHs4OwPJTydx9nBWA5aeiOXs5OQDLT2VT93NSAJafPZiyp3cHYPnZk3v39a4ALD97dM/efhqA5WfPPtvfrh+FgL25GYCrP0dwa48/DMDycyQf7bNbIKK9G4CrP0f03l47AYj2SwCu/hzZ9X47AYj2UwCu/iT4cc+dAET7HoCrP0ku++4EIJoAiHZqze0PuZwARBMA0QRANAEQ7cEbYJI5AYgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKL9NvoJ3OPvP/+Z/bV//PV7x2eS6cjzP1X+v0GXDP5a9ReiooT5lwyg5+CvVX0hKkmaf7n3AGsOf4vH37u0+ZcKYKvhVHsRqkicf6kAYGtlAtj6qlDpKlRB6vzLBAAjlAhg1NWgylVotOT5lwgARtnFvwS31trLt38nf83565cVnkmmo86/fABzBn/9tXt4Iao6+vxL3wItGf4aj5MmYf5lA+g9tMovQkUp8y8bAGyhZABrXS2qXoWqSZp/yQBgKwIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIFr5j0OvrcJvJTGOE4BoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiBa/Mehq/3ZzhGSPxLuBCCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIVjKAtf6wcuU/2FxJ0vxLBrCGisNPUnX+ZQOoOrAUKfMvG0BrfV6E89cvMS9mbwnzLx1Aa8sGWHnwe3H0+e/m9wH2MMwjO+r8y58AsKYSAYz6rSy/Dfa/5PmXCABGKRPA1leDClefSlLnXyaALVUZfqpK8y8VQKXBJEqc/+nx/PQ2+klcW+u/6Uh8gedImn/JAC56vhAVh19dwvxLB3Cx5IWoOvg9OfL8dxEArKXUm2DYmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCI9vD68nwa/SRgFCcA0QRANAEQ7aG11rwPINHry/PJCUA0ARDtewBug0hy2XcnANEEQLSfAnAbRIIf99wJQLRfAnAKcGTX++0EINq7ATgFOKL39toJQLQPA3AKcCQf7fPNE0AEHMGtPXYLxKF9dhH/NACnAEd21wkgAvbonr29+xZIBOzJvfs66T2ACNiDKXs6+U2wCKhs6n7O+imQCKhozl7O/jGoCKhk7j4u+ncAEVDBkj3sssCP56e3Ho8DU/S4AHe9gguBrfS6++j6UQi3RGyh556ttrBOA3pb4wK7+hVbCCy15p3FZrcsQmCqLW6pN79nFwK3bP0+cuibVjHQ2tgfnvwHephZ3onKCNoAAAAASUVORK5CYII=">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -1030,3 +1037,10 @@ function renderLogHistory(logs){
   ).join('') : '<span style="color:var(--muted)">Aucun historique pour cet exercice</span>';
 }
 </script></body></html>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
