@@ -173,6 +173,7 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
   </div>
 </div>
 
+
 <div id="auth" class="card">
   <input id="email" placeholder="email">
   <input id="pass" type="password" placeholder="mot de passe">
@@ -323,7 +324,7 @@ button.danger{background:linear-gradient(180deg,#e2554a,#c53c31 55%,#a52e25);col
       <select id="logExo" onchange="onLogExoChange()"></select>
       <div id="lastWeight" style="font-size:12px;color:var(--muted);margin:2px 0"></div>
       <div class="qtyRow">
-        <input id="logWeight" type="number" placeholder="Poids (kg)">
+        <input id="logWeight" type="text" placeholder="Poids (ex: 20 ou 20,20,18,15 — un par série)">
         <input id="logSets" type="number" placeholder="Séries">
       </div>
       <input id="logReps" placeholder="Reps (ex: 10,10,9,8)">
@@ -1257,6 +1258,33 @@ async function loadSuiviTab(){
   sel.innerHTML=myProgExos.length ? myProgExos.map(e=>`<option value="${e.id}">${e.name}</option>`).join('') : '<option>Ajoute d\'abord un exercice à ton programme</option>';
   if(myProgExos.length) onLogExoChange();
 }
+function parseWeights(w){
+  return String(w==null?'':w).split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+}
+function maxWeight(w){
+  const parts=parseWeights(w);
+  return parts.length ? Math.max(...parts) : 0;
+}
+function parseReps(r){
+  return String(r==null?'':r).split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+}
+function minReps(r){
+  const parts=parseReps(r);
+  return parts.length ? Math.min(...parts) : null;
+}
+function formatSets(l){
+  const weights=parseWeights(l.weight);
+  const repsArr=String(l.reps||'').split(',').map(s=>s.trim()).filter(s=>s!=='');
+  const n=Math.max(weights.length,repsArr.length);
+  if(n<=1) return `${l.weight}kg x${l.sets} (${l.reps||''})`;
+  const parts=[];
+  for(let i=0;i<n;i++){
+    const w=weights.length ? (weights[i]!==undefined?weights[i]:weights[weights.length-1]) : '';
+    const r=repsArr[i];
+    parts.push(r!==undefined ? `${w}kg×${r}` : `${w}kg`);
+  }
+  return parts.join(', ');
+}
 async function onLogExoChange(){
   const exoId=val('logExo');
   if(!exoId) return;
@@ -1264,23 +1292,43 @@ async function onLogExoChange(){
   workoutLogsById={};
   (logs||[]).forEach(l=>{ workoutLogsById[l.id]=l; });
   const last=logs && logs.length ? logs[logs.length-1] : null;
-  document.getElementById('lastWeight').textContent=last ? `Dernier : ${last.weight}kg x${last.sets} le ${last.date}` : 'Aucun historique';
+  document.getElementById('lastWeight').textContent=last ? `Dernier (${last.date}) : ${formatSets(last)}` : 'Aucun historique';
   drawChart(logs||[]);
   renderLogHistory(logs||[]);
 }
+const REP_COLORS=['#6ba3d6','#8ec97a','#e0a3d6','#e0c36b','#d68f6b','#a3a8d6','#7fd6c9','#c98e8e'];
 function drawChart(logs){
   const ctx=document.getElementById('progChart');
   if(progChart) progChart.destroy();
+  const repsLists=logs.map(l=>parseReps(l.reps));
+  const maxSets=repsLists.reduce((m,arr)=>Math.max(m,arr.length),0);
+  const repDatasets=[];
+  for(let i=0;i<maxSets;i++){
+    repDatasets.push({
+      label:`Reps série ${i+1}`,
+      data:repsLists.map(arr=>arr[i]!==undefined?arr[i]:null),
+      borderColor:REP_COLORS[i%REP_COLORS.length],
+      backgroundColor:'transparent',
+      tension:.2,fill:false,yAxisID:'y1',spanGaps:true
+    });
+  }
   progChart=new Chart(ctx,{type:'line',data:{
     labels:logs.map(l=>l.date),
-    datasets:[{label:'Poids (kg)',data:logs.map(l=>l.weight),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true}]
-  },options:{scales:{y:{ticks:{color:'#a7a5a0'}},x:{ticks:{color:'#a7a5a0'}}},plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
+    datasets:[
+      {label:'Poids max (kg)',data:logs.map(l=>maxWeight(l.weight)),borderColor:'#D4A017',backgroundColor:'rgba(212,160,23,.15)',tension:.2,fill:true,yAxisID:'y'},
+      ...repDatasets
+    ]
+  },options:{scales:{
+    y:{position:'left',ticks:{color:'#a7a5a0'},title:{display:true,text:'Poids (kg)',color:'#a7a5a0'}},
+    y1:{position:'right',ticks:{color:'#a7a5a0'},grid:{drawOnChartArea:false},title:{display:true,text:'Reps',color:'#a7a5a0'}},
+    x:{ticks:{color:'#a7a5a0'}}
+  },plugins:{legend:{labels:{color:'#EDEBE6'}}}}});
 }
 async function addLog(){
   const exoId=val('logExo');
   if(!exoId) return;
   const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:exoId,
-    weight:+val('logWeight')||0, sets:+val('logSets')||0, reps:val('logReps')});
+    weight:val('logWeight'), sets:+val('logSets')||0, reps:val('logReps')});
   if(checkErr(error,'ajout résultat séance')) return;
   document.getElementById('logWeight').value='';
   document.getElementById('logSets').value='';
@@ -1289,7 +1337,7 @@ async function addLog(){
 }
 function renderLogHistory(logs){
   document.getElementById('logHistory').innerHTML=logs.length ? [...logs].reverse().map(l=>
-    `<div class="exoCard">${l.date} — ${l.weight}kg x${l.sets} (${l.reps||''})
+    `<div class="exoCard">${l.date} — ${formatSets(l)}
       <a href="#" onclick="editWorkoutLog('${l.id}');return false" class="iconLink" style="color:var(--brass)" title="Modifier">${ICON_EDIT}</a>
       <a href="#" onclick="deleteWorkoutLog('${l.id}');return false" class="iconLink" style="color:#ef4444" title="Supprimer">${ICON_DELETE}</a>
     </div>`
@@ -1298,7 +1346,7 @@ function renderLogHistory(logs){
 async function editWorkoutLog(id){
   const l=workoutLogsById[id];
   if(!l) return;
-  const nw=+prompt('Poids (kg) :', l.weight);
+  const nw=prompt('Poids (ex: 20 ou 20,20,18,15) :', l.weight);
   const ns=+prompt('Séries :', l.sets);
   const nr=prompt('Reps (ex: 10,10,9,8) :', l.reps||'');
   const {error}=await sb.from('workout_logs').update({weight:nw, sets:ns, reps:nr}).eq('id',id);
