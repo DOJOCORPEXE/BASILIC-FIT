@@ -404,6 +404,14 @@ button{cursor:pointer}
 .libCard #exerciseLibraryPremium{display:none;overflow:hidden}
 .libCard.open #exerciseLibraryPremium{display:block;animation:foldIn .22s var(--ease-premium)}
 .libCard.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
+.collapsibleHistory .sectionTitle{cursor:pointer;user-select:none}
+.collapsibleHistory #workoutHistoryGPT,
+.collapsibleHistory #weightHistoryProfileGPT,
+.collapsibleHistory #bfHistoryProfileGPT{display:none;overflow:hidden}
+.collapsibleHistory.open #workoutHistoryGPT,
+.collapsibleHistory.open #weightHistoryProfileGPT,
+.collapsibleHistory.open #bfHistoryProfileGPT{display:block;animation:foldIn .22s var(--ease-premium)}
+.collapsibleHistory.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
 
 
 .macroTileBar{
@@ -794,11 +802,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <div id="exerciseLibraryPremium" class="listPremium" style="margin-top:12px"></div>
     </section>
 
-    <section class="card sectionCard workoutLogger">
-      <div class="sectionTitle">
+    <section class="card sectionCard workoutLogger collapsibleHistory" id="workoutHistoryCardGPT">
+      <div class="sectionTitle" onclick="toggleHistorySection(this)">
         <div><div class="sectionKicker">Suivi séance</div><h2>Noter une performance</h2><p>Charge, séries et répétitions comme dans la version de référence.</p></div>
+        <div class="dayToggle" aria-label="Afficher ou masquer l'historique">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
       </div>
-      <div class="formStack">
+      <div class="formStack" onclick="event.stopPropagation()">
         <select id="logExoGPT" class="fieldSelect" onchange="loadWorkoutHistoryGPT()"></select>
         <div id="lastWorkoutGPT" class="compatNotice"></div>
         <div class="threeCols">
@@ -947,27 +958,41 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     </section>
 
     <div class="sectionGrid" style="margin-top:18px">
-      <section class="card sectionCard">
-        <div class="sectionTitle"><div><div class="sectionKicker">Suivi</div><h2>Poids</h2></div></div>
-        <div class="twoCols">
-          <input id="weightLogGPT" class="fieldInput" type="number" step="0.1" placeholder="Poids aujourd'hui">
-          <button class="cta" style="margin-top:0" onclick="addWeightGPT()">Noter</button>
+      <section class="card sectionCard collapsibleHistory" id="weightHistoryCardGPT">
+        <div class="sectionTitle" onclick="toggleHistorySection(this)">
+          <div><div class="sectionKicker">Suivi</div><h2>Poids</h2></div>
+          <div class="dayToggle" aria-label="Afficher ou masquer l'historique">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
         </div>
-        <div class="twoCols" style="margin-top:9px">
-          <input id="targetWeightGPT" class="fieldInput" type="number" step="0.1" placeholder="Poids cible">
-          <button class="ghostSm" onclick="saveTargetWeightGPT()">Définir l'objectif</button>
+        <div onclick="event.stopPropagation()">
+          <div class="twoCols">
+            <input id="weightLogGPT" class="fieldInput" type="number" step="0.1" placeholder="Poids aujourd'hui">
+            <button class="cta" style="margin-top:0" onclick="addWeightGPT()">Noter</button>
+          </div>
+          <div class="twoCols" style="margin-top:9px">
+            <input id="targetWeightGPT" class="fieldInput" type="number" step="0.1" placeholder="Poids cible">
+            <button class="ghostSm" onclick="saveTargetWeightGPT()">Définir l'objectif</button>
+          </div>
         </div>
         <div id="weightHistoryProfileGPT" class="historyCompact"></div>
       </section>
-      <section class="card sectionCard">
-        <div class="sectionTitle"><div><div class="sectionKicker">Suivi</div><h2>Masse grasse</h2></div></div>
-        <div class="twoCols">
-          <input id="bfLogGPT" class="fieldInput" type="number" step="0.1" placeholder="% aujourd'hui">
-          <button class="cta" style="margin-top:0" onclick="addBodyfatGPT()">Noter</button>
+      <section class="card sectionCard collapsibleHistory" id="bfHistoryCardGPT">
+        <div class="sectionTitle" onclick="toggleHistorySection(this)">
+          <div><div class="sectionKicker">Suivi</div><h2>Masse grasse</h2></div>
+          <div class="dayToggle" aria-label="Afficher ou masquer l'historique">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
         </div>
-        <div class="twoCols" style="margin-top:9px">
-          <input id="targetBfGPT" class="fieldInput" type="number" step="0.1" placeholder="% cible">
-          <button class="ghostSm" onclick="saveTargetBfGPT()">Définir l'objectif</button>
+        <div onclick="event.stopPropagation()">
+          <div class="twoCols">
+            <input id="bfLogGPT" class="fieldInput" type="number" step="0.1" placeholder="% aujourd'hui">
+            <button class="cta" style="margin-top:0" onclick="addBodyfatGPT()">Noter</button>
+          </div>
+          <div class="twoCols" style="margin-top:9px">
+            <input id="targetBfGPT" class="fieldInput" type="number" step="0.1" placeholder="% cible">
+            <button class="ghostSm" onclick="saveTargetBfGPT()">Définir l'objectif</button>
+          </div>
         </div>
         <div id="bfHistoryProfileGPT" class="historyCompact"></div>
       </section>
@@ -1875,16 +1900,21 @@ function renderTrainingDemoGPT(){
   document.getElementById('sessionsPremium').innerHTML=['Push','Pull','Legs','Upper'].map((s,i)=>`<div class="listItemPremium"><div class="listMain"><b>${s}</b><span>${5+i%2} exercices</span></div><span class="pill">Séance ${i+1}</span></div>`).join('');
   document.getElementById('exerciseLibraryPremium').innerHTML=['Développé couché','Tractions','Squat','Élévations latérales'].map((e,i)=>`<div class="listItemPremium"><div class="listMain"><b>${e}</b><span>${['Pectoraux','Dos','Jambes','Épaules'][i]}</span></div><button class="ghostSm">Ajouter</button></div>`).join('');
 }
-let closedSessionsGPT=new Set();
+let openSessionsGPT=new Set();
 function toggleSessionCard(header){
   const card=header.closest('.exerciseCard');
   if(!card)return;
   const id=card.dataset.sessionId;
   const nowOpen=card.classList.toggle('open');
-  if(nowOpen)closedSessionsGPT.delete(id);else closedSessionsGPT.add(id);
+  if(nowOpen)openSessionsGPT.add(id);else openSessionsGPT.delete(id);
 }
 function toggleLibraryGPT(){
   const card=document.getElementById('libraryCardGPT');
+  if(!card)return;
+  card.classList.toggle('open');
+}
+function toggleHistorySection(header){
+  const card=header.closest('.collapsibleHistory');
   if(!card)return;
   card.classList.toggle('open');
 }
@@ -1893,7 +1923,7 @@ function renderSessionsGPT(){
   if(!sessionsGPT.length){box.innerHTML='<div class="emptyPremium"><b>Aucune séance créée</b><span>Commence par créer une séance puis ajoute tes exercices.</span></div>';return}
   box.innerHTML=sessionsGPT.map(s=>{
     const exos=programGPT.filter(p=>p.session_id===s.id),count=exos.length;
-    const isOpen=!closedSessionsGPT.has(s.id);
+    const isOpen=openSessionsGPT.has(s.id);
     return `<div class="exerciseCard collapsible ${isOpen?'open':''}" data-session-id="${s.id}">
       <div class="exerciseHead" onclick="toggleSessionCard(this)" style="cursor:pointer;user-select:none">
         <div><h3>${escapeHtml(s.name)}</h3><p>${count} exercice${count>1?'s':''}</p></div>
