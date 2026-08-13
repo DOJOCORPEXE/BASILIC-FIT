@@ -140,7 +140,12 @@ button{cursor:pointer}
 .macro b{font-size:15px}.macro span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.11em}
 .miniProgress{height:3px;background:rgba(255,255,255,.07);border-radius:10px;margin-top:10px;overflow:hidden}
 .miniProgress i{height:100%;display:block;background:#82847f}
-.macro:first-child .miniProgress i{background:var(--emerald-hi)}
+.macro:nth-child(1) .miniProgress i{background:var(--protein)}
+.macro:nth-child(2) .miniProgress i{background:var(--carbs)}
+.macro:nth-child(3) .miniProgress i{background:var(--fat)}
+.macro:nth-child(1) .macroTop b{color:#8fc2c3}
+.macro:nth-child(2) .macroTop b{color:#a6b2cf}
+.macro:nth-child(3) .macroTop b{color:#c5a17c}
 .sideStack{display:grid;gap:18px}
 .training{padding:25px 25px;min-height:212px;display:flex;flex-direction:column}
 .sessionBadge{font-size:10px;color:var(--emerald-hi);text-transform:uppercase;letter-spacing:.14em}
@@ -396,6 +401,9 @@ button{cursor:pointer}
 .exerciseCard.collapsible.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
 .exerciseCard.collapsible .listPremium{display:none;overflow:hidden}
 .exerciseCard.collapsible.open .listPremium{display:block;animation:foldIn .22s var(--ease-premium)}
+.libCard #exerciseLibraryPremium{display:none;overflow:hidden}
+.libCard.open #exerciseLibraryPremium{display:block;animation:foldIn .22s var(--ease-premium)}
+.libCard.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
 
 
 .macroTileBar{
@@ -775,11 +783,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       </section>
     </div>
 
-    <section class="card sectionCard" style="margin-top:18px">
-      <div class="sectionTitle">
+    <section class="card sectionCard libCard" id="libraryCardGPT" style="margin-top:18px">
+      <div class="sectionTitle" onclick="toggleLibraryGPT()" style="cursor:pointer;user-select:none">
         <div><div class="sectionKicker">Bibliothèque</div><h2>Exercices</h2><p>Recherche et ajout au programme.</p></div>
+        <div class="dayToggle" aria-label="Afficher ou masquer la liste">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
       </div>
-      <input id="exoSearchPremium" class="fieldInput" placeholder="Chercher un exercice..." oninput="renderExerciseLibraryPremium()">
+      <input id="exoSearchPremium" class="fieldInput" placeholder="Chercher un exercice..." oninput="renderExerciseLibraryPremium()" onclick="event.stopPropagation()" style="margin-top:14px">
       <div id="exerciseLibraryPremium" class="listPremium" style="margin-top:12px"></div>
     </section>
 
@@ -967,7 +978,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <div class="settingsGroup">
         <div class="settingRow"><div><b>Rappels de séance</b><span>Bannière si une séance planifiée aujourd'hui n'est pas encore faite.</span></div><div class="toggle on" id="settingReminderGPT" onclick="toggleSettingGPT('reminder',this)"></div></div>
         <div class="settingRow"><div><b>Résumé nutritionnel</b><span>Afficher la carte nutrition sur le tableau de bord.</span></div><div class="toggle on" id="settingNutriGPT" onclick="toggleSettingGPT('nutriSummary',this)"></div></div>
-        <div class="settingRow"><div><b>Mode sombre</b><span>Identité Basilic Fit — thème unique, non désactivable.</span></div><div class="toggle on" style="opacity:.5;cursor:default"></div></div>
       </div>
     </section>
 
@@ -1208,6 +1218,7 @@ function initSettingsUIGPT(){
 }
 
 function showPage(page){
+  try{localStorage.setItem('bf_lastPage',page);}catch(e){}
   const pages=['dashboard','nutrition','training','planning','progress','profile','workout'];
   pages.forEach(p=>{
     const el=document.getElementById(p+'Page');
@@ -1409,6 +1420,11 @@ async function boot(){
     profile=p||null;showSetupGPT();return;
   }
   profile=p;showAppGPT();await hydrateAppGPT();
+  let lastPageGPT=null;
+  try{lastPageGPT=localStorage.getItem('bf_lastPage');}catch(e){}
+  if(lastPageGPT==='workout')lastPageGPT='training';
+  const restorablePagesGPT=['dashboard','nutrition','training','planning','progress','profile'];
+  if(lastPageGPT&&restorablePagesGPT.includes(lastPageGPT)&&lastPageGPT!=='dashboard')showPage(lastPageGPT);
 }
 async function loadNutrition(){
   const date=document.getElementById('mealDate').value||new Date().toISOString().slice(0,10);
@@ -1866,6 +1882,11 @@ function toggleSessionCard(header){
   const id=card.dataset.sessionId;
   const nowOpen=card.classList.toggle('open');
   if(nowOpen)closedSessionsGPT.delete(id);else closedSessionsGPT.add(id);
+}
+function toggleLibraryGPT(){
+  const card=document.getElementById('libraryCardGPT');
+  if(!card)return;
+  card.classList.toggle('open');
 }
 function renderSessionsGPT(){
   const box=document.getElementById('sessionsPremium');
