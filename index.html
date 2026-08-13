@@ -462,8 +462,8 @@ button:active{transform:scale(.97)}
 button:focus-visible,input:focus-visible,select:focus-visible{
   outline:2px solid rgba(18,164,136,.5);outline-offset:2px
 }
-.page.active{animation:pageIn .25s var(--ease-premium)}
-@keyframes pageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.page.active{animation:pageIn .15s var(--ease-premium)}
+@keyframes pageIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
 .mealGroup{overflow:hidden}
 .dayPremium.open .mealGroup{animation:foldIn .22s var(--ease-premium)}
 @keyframes foldIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
@@ -1260,7 +1260,7 @@ function showPage(page){
   if(page==='progress') loadProgressGPT();
   if(page==='profile') loadProfileGPT();
   toggleQuickMenu(false);
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'instant'});
 }
 function toggleQuickMenu(force){
   const m=document.getElementById('quickMenu');
