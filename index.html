@@ -954,6 +954,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         <div><label class="formLabel">Durée séance (min)</label><input id="pDurationGPT" class="fieldInput" type="number"></div>
         <div><label class="formLabel">Intensité</label><select id="pIntensityGPT" class="fieldSelect"><option value="low">Légère</option><option value="med">Modérée</option><option value="high">Élevée</option></select></div>
         <div><label class="formLabel">Agressivité objectif</label><select id="pAggGPT" class="fieldSelect"><option value="doux">Douce</option><option value="mod">Modérée</option><option value="agressif">Agressive</option></select></div>
+        <div><label class="formLabel">Fuseau horaire</label><select id="pTimezoneGPT" class="fieldSelect"></select></div>
       </div>
     </section>
 
@@ -1120,6 +1121,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let user=null;
 let profile=null;
+let profileTimezoneGPT='Europe/Paris';
 let pendingFood=null;
 let searchTimeout=null;
 let lastMeals=[];
@@ -1270,6 +1272,25 @@ function toggleQuickMenu(force){
 function closeModal(id){document.getElementById(id).classList.remove('show')}
 function openCustomFood(){document.getElementById('customModal').classList.add('show')}
 
+function todayLocalGPT(d){
+  try{
+    return new Intl.DateTimeFormat('en-CA',{timeZone:profileTimezoneGPT||'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(d||new Date());
+  }catch(e){
+    const x=d||new Date();
+    const y=x.getFullYear(),m=String(x.getMonth()+1).padStart(2,'0'),day=String(x.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+}
+function populateTimezoneSelectGPT(sel,current){
+  if(!sel)return;
+  let zones=[];
+  try{zones=Intl.supportedValuesOf('timeZone');}catch(e){
+    zones=['Europe/Paris','Europe/London','America/New_York','America/Los_Angeles','America/Sao_Paulo','Africa/Casablanca','Indian/Reunion','America/Guadeloupe','America/Martinique','Asia/Dubai','Asia/Tokyo','Australia/Sydney','Pacific/Noumea'];
+  }
+  if(!zones.includes('Europe/Paris'))zones.unshift('Europe/Paris');
+  sel.innerHTML=zones.map(z=>`<option value="${z}">${z}</option>`).join('');
+  sel.value=current||'Europe/Paris';
+}
 function formatDateFR(d){
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const [y,m,day]=d.split('-'); const dt=new Date(+y,+m-1,+day);
@@ -1351,7 +1372,7 @@ async function saveInitialProfileGPT(){
   };
   if(!prof.weight_kg||!prof.height_cm||!prof.age)return toastGPT('Poids, taille et âge sont requis','error');
   const targets=computeTargetsOriginalGPT(prof);
-  const {data,error}=await sb.from('profiles').upsert({id:user.id,...prof,...targets,last_adjust_date:new Date().toISOString().slice(0,10)}).select().maybeSingle();
+  const {data,error}=await sb.from('profiles').upsert({id:user.id,...prof,...targets,last_adjust_date:todayLocalGPT()}).select().maybeSingle();
   if(error)return toastGPT(error.message,'error',4200);
   profile=data||{id:user.id,...prof,...targets};
   showAppGPT();
@@ -1361,7 +1382,7 @@ async function saveInitialProfileGPT(){
 let dashWeightChartGPT=null;
 async function hydrateAppGPT(){
   document.getElementById('greetingGPT').textContent=greetingForNowGPT();
-  document.getElementById('mealDate').value=document.getElementById('mealDate').value||new Date().toISOString().slice(0,10);
+  document.getElementById('mealDate').value=document.getElementById('mealDate').value||todayLocalGPT();
   initSettingsUIGPT();
   await Promise.all([loadNutrition(),loadDashboardGPT(),loadAvatarAtBootGPT()]);
 }
@@ -1373,7 +1394,7 @@ async function loadAvatarAtBootGPT(){
   if(fallback)fallback.style.display='none';
 }
 async function loadDashboardGPT(){
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayLocalGPT();
   const dashDatePill=document.getElementById('dashDatePillGPT');
   if(dashDatePill)dashDatePill.textContent=formatDatePillFR(today);
   document.getElementById('dashSessionsWeekGPT').textContent=profile?.sessions_per_week??'—';
@@ -1431,7 +1452,7 @@ async function loadDashboardGPT(){
 }
 
 async function boot(){
-  const date=new Date().toISOString().slice(0,10);
+  const date=todayLocalGPT();
   const mealDate=document.getElementById('mealDate');
   if(mealDate&&!mealDate.value)mealDate.value=date;
   const {data:{session}}=await sb.auth.getSession();
@@ -1444,7 +1465,7 @@ async function boot(){
   if(!p||!p.kcal_target){
     profile=p||null;showSetupGPT();return;
   }
-  profile=p;showAppGPT();await hydrateAppGPT();
+  profile=p;profileTimezoneGPT=p.timezone||'Europe/Paris';showAppGPT();await hydrateAppGPT();
   let lastPageGPT=null;
   try{lastPageGPT=localStorage.getItem('bf_lastPage');}catch(e){}
   if(lastPageGPT==='workout')lastPageGPT='training';
@@ -1452,7 +1473,7 @@ async function boot(){
   if(lastPageGPT&&restorablePagesGPT.includes(lastPageGPT)&&lastPageGPT!=='dashboard')showPage(lastPageGPT);
 }
 async function loadNutrition(){
-  const date=document.getElementById('mealDate').value||new Date().toISOString().slice(0,10);
+  const date=document.getElementById('mealDate').value||todayLocalGPT();
   document.getElementById('nutritionDatePill').textContent=formatDateFR(date).toUpperCase();
   if(!user){
     renderDemoNutrition();
@@ -1464,7 +1485,7 @@ async function loadNutrition(){
   renderNutrition(lastMeals,date);
 }
 function renderDemoNutrition(){
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayLocalGPT();
   const demo=[
     {id:'d1',date:today,description:'Skyr + whey',p:46,c:14,f:2,kcal:265},
     {id:'d2',date:today,description:'Poulet, pâtes, haricots verts',p:66,c:102,f:14,kcal:845},
@@ -1514,7 +1535,7 @@ function renderNutrition(meals,selectedDate){
   const dates=Object.keys(grouped).sort().reverse().slice(0,7);
   document.getElementById('nutritionDays').innerHTML=dates.length?dates.map(d=>{
     const items=grouped[d],tt=totalsForDate(items,d);
-    const isToday=d===new Date().toISOString().slice(0,10);
+    const isToday=d===todayLocalGPT();
     return `<article class="card dayPremium ${isToday?'today open':''}" data-day="${d}">
       <div class="dayHeadPremium" onclick="toggleNutritionDay(this)">
         <div><h3>${isToday?"Aujourd'hui":formatDateFR(d)}</h3><p>${items.length} aliment${items.length>1?'s':''} enregistré${items.length>1?'s':''}</p></div>
@@ -1602,7 +1623,7 @@ async function confirmFoodAdd(){
   const unit=document.getElementById('qtyUnit').value;
   const grams=qty*(UNIT_G[unit]||1),r=grams/100;
   const meal={
-    user_id:user?.id,date:document.getElementById('mealDate').value||new Date().toISOString().slice(0,10),
+    user_id:user?.id,date:document.getElementById('mealDate').value||todayLocalGPT(),
     description:`${pendingFood.name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`,
     kcal:Math.round(pendingFood.kcal100*r),p:Math.round(pendingFood.p100*r),c:Math.round(pendingFood.c100*r),f:Math.round(pendingFood.f100*r)
   };
@@ -1627,7 +1648,7 @@ async function confirmCustomFood(){
     kcal=Math.round(kcal*r);p=Math.round(p*r);c=Math.round(c*r);f=Math.round(f*r);
     description=`${name} (${qty}${unit==='g'?'g':unit.toUpperCase()})`;
   }else{kcal=Math.round(kcal);p=Math.round(p);c=Math.round(c);f=Math.round(f)}
-  const meal={user_id:user?.id,date:document.getElementById('mealDate').value||new Date().toISOString().slice(0,10),description,kcal,p,c,f};
+  const meal={user_id:user?.id,date:document.getElementById('mealDate').value||todayLocalGPT(),description,kcal,p,c,f};
   if(user){
     const {error}=await sb.from('meals').insert(meal);if(error)return toastGPT(error.message,'error');
     toastGPT('Aliment ajouté');
@@ -1861,7 +1882,7 @@ function toggleLegalGPT(id){document.getElementById(id).classList.toggle('show')
 
 let allExercisesGPT=[],sessionsGPT=[],programGPT=[],planningGPT=[],weightChartGPT=null,bfChartGPT=null,exerciseChartGPT=null,todayPlanCacheGPT=[],activeWorkoutGPT=null;
 let calMonthGPT=new Date(); calMonthGPT.setDate(1);
-let calSelectedGPT=new Date().toISOString().slice(0,10);
+let calSelectedGPT=todayLocalGPT();
 
 async function ensureTrainingDataGPT(){
   if(!user) return;
@@ -1885,7 +1906,7 @@ async function loadTrainingGPT(){
   const uniq=[...new Map(programGPT.map(pe=>[pe.exercise_id,pe.exercises])).values()];
   const logSel=document.getElementById('logExoGPT');
   if(logSel){logSel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Ajoute un exercice au programme</option>';if(uniq.length)loadWorkoutHistoryGPT();}
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayLocalGPT();
   const {data:pl}=await sb.from('planning').select('*,sessions(name)').eq('user_id',user.id).eq('date',today);
   todayPlanCacheGPT=pl||[];
   const todayBox=document.getElementById('todayTraining');
@@ -2029,7 +2050,7 @@ async function loadPlanningGPT(){
 }
 function renderPlanningDemoGPT(){
   sessionsGPT=[{id:'demo1',name:'Push'},{id:'demo2',name:'Pull'}];
-  planningGPT=[{id:'p1',date:new Date().toISOString().slice(0,10),sessions:{name:'Push'},note:null}];
+  planningGPT=[{id:'p1',date:todayLocalGPT(),sessions:{name:'Push'},note:null}];
   document.getElementById('planSessionGPT').innerHTML='<option>Push</option><option>Pull</option>';
   renderCalendarGPT();renderSelectedDayGPT();
 }
@@ -2039,7 +2060,7 @@ function renderCalendarGPT(){
   const names=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   document.getElementById('calMonthLabelGPT').textContent=names[calMonthGPT.getMonth()]+' '+calMonthGPT.getFullYear();
   const y=calMonthGPT.getFullYear(),m=calMonthGPT.getMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
-  const today=new Date().toISOString().slice(0,10),byDate={}; planningGPT.forEach(p=>(byDate[p.date]=byDate[p.date]||[]).push(p));
+  const today=todayLocalGPT(),byDate={}; planningGPT.forEach(p=>(byDate[p.date]=byDate[p.date]||[]).push(p));
   let out=['L','M','M','J','V','S','D'].map(x=>`<div class="calLabel">${x}</div>`).join('');
   out+='<div></div>'.repeat(offset);
   for(let d=1;d<=days;d++){
@@ -2127,6 +2148,8 @@ async function loadProfileGPT(){
   document.getElementById('pDurationGPT').value=p.session_duration_min||60;
   document.getElementById('pIntensityGPT').value=p.intensity||'med';
   document.getElementById('pAggGPT').value=p.aggressiveness||'mod';
+  populateTimezoneSelectGPT(document.getElementById('pTimezoneGPT'),p.timezone||'Europe/Paris');
+  profileTimezoneGPT=p.timezone||'Europe/Paris';
   document.getElementById('targetWeightGPT').value=p.target_weight_kg||'';
   document.getElementById('targetBfGPT').value=p.target_bodyfat_pct||'';
   document.getElementById('profileKcalTarget').textContent=Math.round(p.kcal_target||0);
@@ -2153,11 +2176,12 @@ async function saveProfileGPT(){
     body_fat_pct:+document.getElementById('pBfGPT').value||null,goal:document.getElementById('pGoalGPT').value,
     neat_level:document.getElementById('pNeatGPT').value,sessions_per_week:+document.getElementById('pSessionsGPT').value||0,
     session_duration_min:+document.getElementById('pDurationGPT').value||0,intensity:document.getElementById('pIntensityGPT').value,
-    aggressiveness:document.getElementById('pAggGPT').value
+    aggressiveness:document.getElementById('pAggGPT').value,
+    timezone:document.getElementById('pTimezoneGPT').value||'Europe/Paris'
   };
   const targets=computeTargetsOriginalGPT(p);
   const {data,error}=await sb.from('profiles').upsert({id:user.id,...p,...targets}).select().maybeSingle();
-  if(error)return toastGPT(error.message,'error');profile=data||{...p,...targets};toastGPT('Profil mis à jour');loadProfileGPT();loadNutrition();loadDashboardGPT();
+  if(error)return toastGPT(error.message,'error');profile=data||{...p,...targets};profileTimezoneGPT=profile.timezone||'Europe/Paris';toastGPT('Profil mis à jour');loadProfileGPT();loadNutrition();loadDashboardGPT();
 }
 async function addWeightGPT(){
   if(!user){toastGPT('Mode maquette.','error');return}
