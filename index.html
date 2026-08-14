@@ -131,6 +131,8 @@ button{cursor:pointer}
 .calorieRow{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
 .bigKcal{font-size:58px;line-height:.9;font-weight:650;letter-spacing:-.06em}
 .bigKcal small{font-size:15px;color:var(--muted);letter-spacing:0;font-weight:500;margin-left:8px}
+.burnedInline{margin-top:6px;font-size:11px;color:var(--muted)}
+.burnedInline b{color:var(--emerald-hi);font-weight:650}
 .remaining{text-align:right}
 .remaining b{display:block;font-size:24px;font-weight:600}
 .remaining span{font-size:11px;color:var(--muted)}
@@ -233,6 +235,9 @@ button{cursor:pointer}
 .dayTotal{text-align:right}
 .dayTotal b{display:block;font-size:15px}
 .dayTotal span{font-size:9px;color:var(--muted);text-transform:uppercase}
+.trendArrow{display:flex;justify-content:flex-end;margin-top:3px}
+.trendArrow.down{color:var(--danger)}
+.trendArrow.up{color:var(--emerald-hi)}
 .mealGroup{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
 .mealRowPremium{
   display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.045)
@@ -657,7 +662,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <section class="card nutrition">
         <div class="cardTitle"><strong>Aujourd'hui</strong><span class="smallLink" onclick="showPage('nutrition')">Nutrition →</span></div>
         <div class="calorieRow">
-          <div class="bigKcal" id="dashKcal">1 740<small>kcal</small></div>
+          <div>
+            <div class="bigKcal" id="dashKcal">1 740<small>kcal</small></div>
+            <div class="burnedInline" id="dashBurnedLine"><b id="dashBurned">—</b> kcal brûlées</div>
+          </div>
           <div class="remaining"><b id="dashRemaining">510</b><span>kcal restantes</span></div>
         </div>
         <div class="progress"><i id="dashKcalBar"></i></div>
@@ -729,6 +737,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           <div class="kcalCopy">
             <h2 id="remainingHeadline">510 kcal restantes</h2>
             <p>Cible quotidienne : <strong id="targetKcal">2250 kcal</strong><br>La priorité reste la régularité, pas la perfection.</p>
+            <p style="margin-top:6px"><strong id="nutriBurnedKcal">—</strong> kcal brûlées ce jour</p>
           </div>
         </div>
 
@@ -918,6 +927,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         <div class="canvasWrap"><canvas id="bodyfatChartGPT"></canvas></div>
       </section>
     </div>
+
+    <section class="card chartCard" style="margin-top:18px">
+      <div class="sectionTitle"><div><div class="sectionKicker">Dépense</div><h2>Calories brûlées par jour</h2><p>Estimation par séance, cumulée par journée.</p></div></div>
+      <div class="canvasWrap"><canvas id="burnedKcalChartGPT"></canvas></div>
+    </section>
 
     <section class="card chartCard" style="margin-top:18px">
       <div class="sectionTitle">
@@ -1441,6 +1455,11 @@ async function loadDashboardGPT(){
     }
   }
   const entry=plan?.[0];
+  const dashBurnedEl=document.getElementById('dashBurned');
+  if(dashBurnedEl){
+    const burnedToday=(plan||[]).reduce((a,p)=>a+(+p.kcal_burned||0),0);
+    dashBurnedEl.textContent=burnedToday?burnedToday.toLocaleString('fr-FR'):'—';
+  }
   if(entry){
     const name=entry.sessions?.name||entry.note||'Séance';
     document.getElementById('dashSessionNameGPT').textContent=name;
@@ -1500,10 +1519,15 @@ async function loadNutrition(){
     renderDemoNutrition();
     return;
   }
-  const {data:meals,error}=await sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at');
+  const [{data:meals,error},{data:planAll}]=await Promise.all([
+    sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at'),
+    sb.from('planning').select('date,kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null)
+  ]);
   if(error){console.error(error);return renderDemoNutrition()}
   lastMeals=meals||[];
-  renderNutrition(lastMeals,date);
+  const burnedByDateGPT={};
+  (planAll||[]).forEach(p=>{burnedByDateGPT[p.date]=(burnedByDateGPT[p.date]||0)+(+p.kcal_burned||0);});
+  renderNutrition(lastMeals,date,burnedByDateGPT);
 }
 function renderDemoNutrition(){
   const today=todayLocalGPT();
@@ -1521,13 +1545,17 @@ function totalsForDate(meals,date){
   }),{kcal:0,p:0,c:0,f:0});
 }
 function pct(v,t){return Math.max(0,Math.min(100,(+v||0)/(+t||1)*100))}
-function renderNutrition(meals,selectedDate){
+function renderNutrition(meals,selectedDate,burnedByDate){
+  burnedByDate=burnedByDate||{};
   const prof=profile||defaultProfile();
   const t=totalsForDate(meals,selectedDate);
   const remaining=Math.max(0,Math.round(prof.kcal_target-t.kcal));
   document.getElementById('nutriKcal').textContent=Math.round(t.kcal);
   document.getElementById('remainingHeadline').textContent=`${remaining} kcal restantes`;
   document.getElementById('targetKcal').textContent=`${Math.round(prof.kcal_target)} kcal`;
+  const burnedEl=document.getElementById('nutriBurnedKcal');
+  const burnedKcal=burnedByDate[selectedDate]||0;
+  if(burnedEl)burnedEl.textContent=burnedKcal?Math.round(burnedKcal).toLocaleString('fr-FR'):'0';
   document.getElementById('nutriP').textContent=`${Math.round(t.p)}g`;
   document.getElementById('nutriC').textContent=`${Math.round(t.c)}g`;
   document.getElementById('nutriF').textContent=`${Math.round(t.f)}g`;
@@ -1556,13 +1584,15 @@ function renderNutrition(meals,selectedDate){
   const dates=Object.keys(grouped).sort().reverse().slice(0,7);
   document.getElementById('nutritionDays').innerHTML=dates.length?dates.map(d=>{
     const items=grouped[d],tt=totalsForDate(items,d);
+    const burnedForDay=burnedByDate[d]||0;
     const isToday=d===todayLocalGPT();
     return `<article class="card dayPremium ${isToday?'today open':''}" data-day="${d}">
       <div class="dayHeadPremium" onclick="toggleNutritionDay(this)">
         <div><h3>${isToday?"Aujourd'hui":formatDateFR(d)}</h3><p>${items.length} aliment${items.length>1?'s':''} enregistré${items.length>1?'s':''}</p></div>
         <div style="display:flex;align-items:center;gap:12px">
           <div class="dayTotals">
-            <div class="dayTotal"><b>${Math.round(tt.kcal)}</b><span>kcal</span></div>
+            <div class="dayTotal"><b>${Math.round(burnedForDay)}</b><span>brûlées</span><div class="trendArrow down"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div></div>
+            <div class="dayTotal"><b>${Math.round(tt.kcal)}</b><span>kcal</span><div class="trendArrow up"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div></div>
             <div class="dayTotal"><b>${Math.round(tt.p)}g</b><span>prot.</span></div>
           </div>
           <div class="dayToggle" aria-label="Afficher ou masquer les aliments">
@@ -1935,7 +1965,7 @@ async function deleteAccountGPT(){
 }
 function toggleLegalGPT(id){document.getElementById(id).classList.toggle('show')}
 
-let allExercisesGPT=[],sessionsGPT=[],programGPT=[],planningGPT=[],weightChartGPT=null,bfChartGPT=null,exerciseChartGPT=null,todayPlanCacheGPT=[],activeWorkoutGPT=null;
+let allExercisesGPT=[],sessionsGPT=[],programGPT=[],planningGPT=[],weightChartGPT=null,bfChartGPT=null,exerciseChartGPT=null,burnedKcalChartGPT=null,todayPlanCacheGPT=[],activeWorkoutGPT=null;
 let calMonthGPT=new Date(); calMonthGPT.setDate(1);
 let calSelectedGPT=todayLocalGPT();
 
@@ -2265,10 +2295,10 @@ async function loadProgressGPT(){
     sb.from('weight_logs').select('*').eq('user_id',user.id).order('date'),
     sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date'),
     sb.from('workout_logs').select('*').eq('user_id',user.id),
-    sb.from('planning').select('kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null)
+    sb.from('planning').select('date,kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null).order('date')
   ]);
   updateProgressMetricsGPT(w||[],b||[],logs||[],plan||[]);
-  drawWeightGPT(w||[]);drawBfGPT(b||[]);
+  drawWeightGPT(w||[]);drawBfGPT(b||[]);drawBurnedKcalGPT(plan||[]);
   const uniq=[...new Map(programGPT.map(p=>[p.exercise_id,p.exercises])).values()];
   const sel=document.getElementById('progressExerciseGPT');
   sel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Aucun exercice</option>';
@@ -2277,7 +2307,8 @@ async function loadProgressGPT(){
 function renderProgressDemoGPT(){
   const w=[{date:'2026-07-15',weight:75.1},{date:'2026-07-22',weight:74.8},{date:'2026-07-29',weight:74.5},{date:'2026-08-05',weight:74.3},{date:'2026-08-13',weight:74.2}];
   const b=[{date:'2026-07-15',bodyfat_pct:17.2},{date:'2026-08-13',bodyfat_pct:16.7}];
-  updateProgressMetricsGPT(w,b,[1,2,3,4],[{kcal_burned:340},{kcal_burned:290}]);drawWeightGPT(w);drawBfGPT(b);
+  const plan=[{date:'2026-08-10',kcal_burned:340},{date:'2026-08-12',kcal_burned:290},{date:'2026-08-13',kcal_burned:410}];
+  updateProgressMetricsGPT(w,b,[1,2,3,4],plan);drawWeightGPT(w);drawBfGPT(b);drawBurnedKcalGPT(plan);
   document.getElementById('progressExerciseGPT').innerHTML='<option>Développé couché</option>';
   drawExerciseGPT([{date:'01/08',v:72},{date:'04/08',v:74},{date:'08/08',v:76},{date:'12/08',v:78}]);
 }
@@ -2300,6 +2331,14 @@ function makeLineChart(ctx,old,labels,data,label){
 }
 function drawWeightGPT(logs){weightChartGPT=makeLineChart(document.getElementById('weightChartGPT'),weightChartGPT,logs.map(x=>x.date),logs.map(x=>+x.weight),'Poids')}
 function drawBfGPT(logs){bfChartGPT=makeLineChart(document.getElementById('bodyfatChartGPT'),bfChartGPT,logs.map(x=>x.date),logs.map(x=>+x.bodyfat_pct),'Masse grasse')}
+function drawBurnedKcalGPT(planRows){
+  const byDate={};
+  (planRows||[]).forEach(p=>{byDate[p.date]=(byDate[p.date]||0)+(+p.kcal_burned||0);});
+  const dates=Object.keys(byDate).sort().slice(-30);
+  const ctx=document.getElementById('burnedKcalChartGPT');
+  if(burnedKcalChartGPT)burnedKcalChartGPT.destroy();
+  burnedKcalChartGPT=new Chart(ctx,{type:'bar',data:{labels:dates,datasets:[{label:'Kcal brûlées',data:dates.map(d=>byDate[d]),backgroundColor:'rgba(217,101,91,.55)',borderRadius:4,maxBarThickness:22}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#777',maxTicksLimit:6},grid:{display:false}},y:{ticks:{color:'#777'},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
 async function loadExerciseProgressGPT(){
   if(!user)return;
   const id=document.getElementById('progressExerciseGPT').value;if(!id)return;
