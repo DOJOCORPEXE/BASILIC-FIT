@@ -416,10 +416,12 @@ button{cursor:pointer}
 .collapsibleHistory .sectionTitle{cursor:pointer;user-select:none}
 .collapsibleHistory #workoutHistoryGPT,
 .collapsibleHistory #weightHistoryProfileGPT,
-.collapsibleHistory #bfHistoryProfileGPT{display:none;overflow:hidden}
+.collapsibleHistory #bfHistoryProfileGPT,
+.collapsibleHistory #logFormDetailsGPT{display:none;overflow:hidden}
 .collapsibleHistory.open #workoutHistoryGPT,
 .collapsibleHistory.open #weightHistoryProfileGPT,
 .collapsibleHistory.open #bfHistoryProfileGPT{display:block;animation:foldIn .22s var(--ease-premium)}
+.collapsibleHistory.open #logFormDetailsGPT{display:grid;gap:10px;animation:foldIn .22s var(--ease-premium)}
 .collapsibleHistory.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
 
 
@@ -824,29 +826,31 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       </div>
       <div class="formStack" onclick="event.stopPropagation()">
         <select id="logExoGPT" class="fieldSelect" onchange="onLogExoSelectGPT()"></select>
-        <div id="lastWorkoutGPT" class="compatNotice"></div>
-        <div class="threeCols" id="logStrengthRowGPT">
-          <input id="logWeightGPT" class="fieldInput" placeholder="Poids : 20 ou 20,20,18">
-          <input id="logSetsGPT" class="fieldInput" type="number" placeholder="Séries">
-          <input id="logRepsGPT" class="fieldInput" placeholder="Reps : 10,10,9,8">
-        </div>
-        <div id="logCardioRowGPT" style="display:none">
-          <div class="threeCols">
-            <input id="logDurationGPT" class="fieldInput" type="number" min="1" placeholder="Durée (min)">
-            <select id="logCardioIntensityGPT" class="fieldSelect">
-              <option value="">Intensité</option>
-              <option value="faible">Faible</option>
-              <option value="moyenne">Moyenne</option>
-              <option value="haute">Haute</option>
-            </select>
-            <input id="logCardioDistanceGPT" class="fieldInput" type="number" step="0.1" placeholder="Distance (km)">
+        <div id="logFormDetailsGPT">
+          <div id="lastWorkoutGPT" class="compatNotice"></div>
+          <div class="threeCols" id="logStrengthRowGPT">
+            <input id="logWeightGPT" class="fieldInput" placeholder="Poids : 20 ou 20,20,18">
+            <input id="logSetsGPT" class="fieldInput" type="number" placeholder="Séries">
+            <input id="logRepsGPT" class="fieldInput" placeholder="Reps : 10,10,9,8">
           </div>
-          <div class="twoCols" style="margin-top:8px">
-            <input id="logCardioInclineGPT" class="fieldInput" type="number" step="0.5" placeholder="Inclinaison (%)">
-            <input id="logCardioFloorsGPT" class="fieldInput" type="number" placeholder="Étages">
+          <div id="logCardioRowGPT" style="display:none">
+            <div class="threeCols">
+              <input id="logDurationGPT" class="fieldInput" type="number" min="1" placeholder="Durée (min)">
+              <select id="logCardioIntensityGPT" class="fieldSelect">
+                <option value="">Intensité</option>
+                <option value="faible">Faible</option>
+                <option value="moyenne">Moyenne</option>
+                <option value="haute">Haute</option>
+              </select>
+              <input id="logCardioDistanceGPT" class="fieldInput" type="number" step="0.1" placeholder="Distance (km)">
+            </div>
+            <div class="twoCols" style="margin-top:8px">
+              <input id="logCardioInclineGPT" class="fieldInput" type="number" step="0.5" placeholder="Inclinaison (%)">
+              <input id="logCardioFloorsGPT" class="fieldInput" type="number" placeholder="Étages">
+            </div>
           </div>
+          <button class="cta" style="margin-top:0" onclick="addWorkoutLogGPT()">Enregistrer la performance</button>
         </div>
-        <button class="cta" style="margin-top:0" onclick="addWorkoutLogGPT()">Enregistrer la performance</button>
       </div>
       <div id="workoutHistoryGPT" class="historyCompact"></div>
     </section>
