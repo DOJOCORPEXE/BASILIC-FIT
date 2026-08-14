@@ -2005,7 +2005,7 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
         <button type="button" class="checkSet" onclick="toggleSetDoneGPT(this)">✓</button>
       </div>`).join('');
     return `<div class="card exerciseCard" data-exo-idx="${ei}">
-      <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}</h3><p>${escapeHtml(pe.sets_reps||'')}</p></div></div>
+      <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}${pe.exercises?.demo_url?` <a href="${escapeHtml(pe.exercises.demo_url)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:400;color:var(--emerald-hi);text-decoration:none;margin-left:8px">Voir la démo ↗</a>`:''}</h3><p>${escapeHtml(pe.sets_reps||'')}</p></div></div>
       <div class="setRows">${rows}</div>
     </div>`;
   }).join('');
