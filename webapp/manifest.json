@@ -1,0 +1,25 @@
+{
+  "name": "Basilic Fit",
+  "short_name": "Basilic Fit",
+  "description": "Suivi sportif et nutritionnel",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2b2c2e",
+  "theme_color": "#2b2c2e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
