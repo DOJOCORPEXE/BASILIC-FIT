@@ -86,8 +86,8 @@ body{
 body:before{
   content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    linear-gradient(90deg,rgba(8,8,8,0),rgba(10,10,10,0) 34%,rgba(10,10,10,0) 67%,rgba(8,8,8,0)),
-    rgba(8,8,8,0);
+    linear-gradient(90deg,rgba(8,8,8,.06),rgba(10,10,10,.10) 34%,rgba(10,10,10,.12) 67%,rgba(8,8,8,.07)),
+    rgba(8,8,8,.04);
 }
 button,input,select{font:inherit}
 button{cursor:pointer}
@@ -99,7 +99,7 @@ button{cursor:pointer}
 }
 .brandMark img{width:100%;height:100%;object-fit:contain}
 .wordmark{line-height:1;display:flex;align-items:center}
-.wordmark img{height:38px;width:auto;display:block}
+.wordmark img{height:38px;width:auto;display:block;filter:brightness(1.35) contrast(1.05)}
 .userActions{display:flex;gap:10px;align-items:center}
 .iconBtn,.avatar{
   width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
