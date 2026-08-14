@@ -322,7 +322,7 @@ button{cursor:pointer}
 .formLabel{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:2px 2px -3px}
 .twoCols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .threeCols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.metricTiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.metricTiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .metricTile{padding:16px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
 .metricTile span{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .metricTile b{display:block;font-size:22px;margin-top:8px}
@@ -335,6 +335,8 @@ button{cursor:pointer}
 .exerciseHead p{margin:4px 0 0;color:var(--muted);font-size:10px}
 .setRows{display:grid;gap:7px;margin-top:12px}
 .setRow{display:grid;grid-template-columns:34px 1fr 1fr 42px;gap:8px;align-items:center}
+.cardioTimerRow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cardioTimerDisplay{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:.02em;min-width:64px}
 .setIndex{font-size:10px;color:var(--muted);text-align:center}
 .setField{border:1px solid var(--line);background:rgba(15,15,15,.78);color:var(--text);border-radius:10px;padding:9px 10px;width:100%}
 .checkSet{width:38px;height:38px;border-radius:10px;border:1px solid rgba(18,164,136,.24);background:var(--emerald-soft);color:var(--emerald-hi)}
@@ -376,7 +378,7 @@ button{cursor:pointer}
 .quickMenu button span{color:var(--emerald-hi);margin-right:8px}
 @media(max-width:760px){
   .sectionGrid{grid-template-columns:1fr}
-  .metricTiles{grid-template-columns:1fr 1fr 1fr}
+  .metricTiles{grid-template-columns:1fr 1fr}
 }
 @media(max-width:480px){
   .twoCols,.threeCols{grid-template-columns:1fr}
@@ -800,24 +802,40 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </div>
-      <input id="exoSearchPremium" class="fieldInput" placeholder="Chercher un exercice..." oninput="renderExerciseLibraryPremium()" onclick="event.stopPropagation()" style="margin-top:14px">
+      <input id="exoSearchPremium" class="fieldInput" placeholder="Chercher un exercice..." oninput="document.getElementById('libraryCardGPT').classList.add('open');renderExerciseLibraryPremium()" onfocus="document.getElementById('libraryCardGPT').classList.add('open')" onclick="event.stopPropagation()" style="margin-top:14px">
       <div id="exerciseLibraryPremium" class="listPremium" style="margin-top:12px"></div>
     </section>
 
     <section class="card sectionCard workoutLogger collapsibleHistory" id="workoutHistoryCardGPT">
       <div class="sectionTitle" onclick="toggleHistorySection(this)">
-        <div><div class="sectionKicker">Suivi séance</div><h2>Noter une performance</h2><p>Charge, séries et répétitions comme dans la version de référence.</p></div>
+        <div><div class="sectionKicker">Suivi séance</div><h2>Noter une performance</h2><p id="workoutLoggerDescGPT">Charge, séries et répétitions comme dans la version de référence.</p></div>
         <div class="dayToggle" aria-label="Afficher ou masquer l'historique">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </div>
       </div>
       <div class="formStack" onclick="event.stopPropagation()">
-        <select id="logExoGPT" class="fieldSelect" onchange="loadWorkoutHistoryGPT()"></select>
+        <select id="logExoGPT" class="fieldSelect" onchange="onLogExoSelectGPT()"></select>
         <div id="lastWorkoutGPT" class="compatNotice"></div>
-        <div class="threeCols">
+        <div class="threeCols" id="logStrengthRowGPT">
           <input id="logWeightGPT" class="fieldInput" placeholder="Poids : 20 ou 20,20,18">
           <input id="logSetsGPT" class="fieldInput" type="number" placeholder="Séries">
           <input id="logRepsGPT" class="fieldInput" placeholder="Reps : 10,10,9,8">
+        </div>
+        <div id="logCardioRowGPT" style="display:none">
+          <div class="threeCols">
+            <input id="logDurationGPT" class="fieldInput" type="number" min="1" placeholder="Durée (min)">
+            <select id="logCardioIntensityGPT" class="fieldSelect">
+              <option value="">Intensité</option>
+              <option value="faible">Faible</option>
+              <option value="moyenne">Moyenne</option>
+              <option value="haute">Haute</option>
+            </select>
+            <input id="logCardioDistanceGPT" class="fieldInput" type="number" step="0.1" placeholder="Distance (km)">
+          </div>
+          <div class="twoCols" style="margin-top:8px">
+            <input id="logCardioInclineGPT" class="fieldInput" type="number" step="0.5" placeholder="Inclinaison (%)">
+            <input id="logCardioFloorsGPT" class="fieldInput" type="number" placeholder="Étages">
+          </div>
         </div>
         <button class="cta" style="margin-top:0" onclick="addWorkoutLogGPT()">Enregistrer la performance</button>
       </div>
@@ -835,7 +853,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     <section class="card sectionCard">
       <div class="sectionTitle">
         <div><div class="sectionKicker">Progression</div><h2 id="workoutSubtitleGPT">0 exercice</h2><p>Renseigne la charge et les reps de chaque série, puis valide.</p></div>
-        <button class="ghostSm" onclick="showPage('training')">← Training</button>
+        <button class="ghostSm" onclick="clearAllCardioTimersGPT();showPage('training')">← Training</button>
       </div>
     </section>
 
@@ -887,6 +905,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <div class="metricTile"><span>Poids actuel</span><b id="metricWeight">—</b><small id="metricWeightDelta">Données insuffisantes</small></div>
       <div class="metricTile"><span>Masse grasse</span><b id="metricBf">—</b><small id="metricBfDelta">Données insuffisantes</small></div>
       <div class="metricTile"><span>Séances</span><b id="metricSessions">—</b><small>Cette période</small></div>
+      <div class="metricTile"><span>Kcal brûlées</span><b id="metricKcalBurned">—</b><small>Estimation séances</small></div>
     </div>
 
     <div class="sectionGrid">
@@ -1733,13 +1752,15 @@ async function deleteSessionGPT(id){
 async function addExerciseToSessionGPT(exerciseId){
   if(!user)return;
   if(!sessionsGPT.length)return toastGPT("Crée d'abord une séance.",'error');
+  const cardio=isCardioExerciseGPT(exerciseId);
   const values=await formUXGPT({title:'Ajouter au programme',fields:[
     {label:'Séance',type:'select',value:sessionsGPT[0].id,options:sessionsGPT.map(s=>({value:s.id,label:s.name}))},
-    {label:'Séries × reps',value:'3x12'}
+    cardio?{label:'Durée prévue (min)',value:'20',type:'number'}:{label:'Séries × reps',value:'3x12'}
   ],confirmText:'Ajouter'});
   if(!values)return;
   const [sessionId,sr]=values;
-  const {error}=await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exerciseId,session_id:sessionId,sets_reps:sr.trim()||'3x12',order_index:programGPT.length});
+  const sets_reps=cardio?`${(+sr||20)} min`:(sr.trim()||'3x12');
+  const {error}=await sb.from('program_exercises').insert({user_id:user.id,exercise_id:exerciseId,session_id:sessionId,sets_reps,order_index:programGPT.length});
   if(error){toastGPT(error.message,'error');return}toastGPT('Exercice ajouté');loadTrainingGPT();
 }
 async function removeProgramExerciseGPT(id){
@@ -1748,7 +1769,26 @@ async function removeProgramExerciseGPT(id){
 
 function parseWeightsGPT(v){return String(v||'').split(',').map(x=>parseFloat(x.trim())).filter(Number.isFinite)}
 function parseRepsGPT(v){return String(v||'').split(',').map(x=>parseFloat(x.trim())).filter(Number.isFinite)}
+function isCardioExerciseGPT(id){
+  return allExercisesGPT.find(e=>e.id===id)?.muscle_group==='Cardio';
+}
+function onLogExoSelectGPT(){
+  const cardio=isCardioExerciseGPT(document.getElementById('logExoGPT').value);
+  document.getElementById('logStrengthRowGPT').style.display=cardio?'none':'grid';
+  document.getElementById('logCardioRowGPT').style.display=cardio?'block':'none';
+  const desc=document.getElementById('workoutLoggerDescGPT');
+  if(desc)desc.textContent=cardio?"Renseigne la durée de l'exercice, ainsi que d'autres paramètres si besoin.":'Charge, séries et répétitions comme dans la version de référence.';
+  loadWorkoutHistoryGPT();
+}
 function formatWorkoutGPT(l){
+  if(l.duration_min){
+    const parts=[`${l.duration_min} min`];
+    if(l.cardio_intensity)parts.push(`intensité ${l.cardio_intensity}`);
+    if(l.distance_km)parts.push(`${l.distance_km} km`);
+    if(l.incline_pct)parts.push(`inclin. ${l.incline_pct}%`);
+    if(l.floors)parts.push(`${l.floors} étage${l.floors>1?'s':''}`);
+    return parts.join(' · ');
+  }
   const ws=parseWeightsGPT(l.weight),rs=String(l.reps||'').split(',').map(x=>x.trim()).filter(Boolean);
   const n=Math.max(ws.length,rs.length,1),out=[];
   for(let i=0;i<n;i++){
@@ -1773,11 +1813,24 @@ async function loadWorkoutHistoryGPT(){
 async function addWorkoutLogGPT(){
   if(!user)return toastGPT('Connexion requise.','error');
   const exercise_id=document.getElementById('logExoGPT').value;if(!exercise_id)return;
-  const row={user_id:user.id,exercise_id,weight:document.getElementById('logWeightGPT').value,
-    sets:+document.getElementById('logSetsGPT').value||0,reps:document.getElementById('logRepsGPT').value};
+  let row;
+  if(isCardioExerciseGPT(exercise_id)){
+    const duration_min=+document.getElementById('logDurationGPT').value||0;
+    if(!duration_min)return toastGPT('Indique une durée en minutes.','error');
+    row={user_id:user.id,exercise_id,duration_min,
+      cardio_intensity:document.getElementById('logCardioIntensityGPT').value||null,
+      distance_km:+document.getElementById('logCardioDistanceGPT').value||null,
+      incline_pct:+document.getElementById('logCardioInclineGPT').value||null,
+      floors:+document.getElementById('logCardioFloorsGPT').value||null,
+      weight:null,sets:null,reps:null};
+  }else{
+    row={user_id:user.id,exercise_id,weight:document.getElementById('logWeightGPT').value,
+      sets:+document.getElementById('logSetsGPT').value||0,reps:document.getElementById('logRepsGPT').value};
+  }
   const {error}=await sb.from('workout_logs').insert(row);if(error)return toastGPT(error.message,'error');
   toastGPT('Performance enregistrée');
-  ['logWeightGPT','logSetsGPT','logRepsGPT'].forEach(id=>document.getElementById(id).value='');
+  ['logWeightGPT','logSetsGPT','logRepsGPT','logDurationGPT','logCardioDistanceGPT','logCardioInclineGPT','logCardioFloorsGPT'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('logCardioIntensityGPT').value='';
   loadWorkoutHistoryGPT();
 }
 async function editWorkoutGPT(id){
@@ -1907,7 +1960,7 @@ async function loadTrainingGPT(){
   renderExerciseLibraryPremium();
   const uniq=[...new Map(programGPT.map(pe=>[pe.exercise_id,pe.exercises])).values()];
   const logSel=document.getElementById('logExoGPT');
-  if(logSel){logSel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Ajoute un exercice au programme</option>';if(uniq.length)loadWorkoutHistoryGPT();}
+  if(logSel){logSel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Ajoute un exercice au programme</option>';if(uniq.length)onLogExoSelectGPT();}
   const today=todayLocalGPT();
   const {data:pl}=await sb.from('planning').select('*,sessions(name)').eq('user_id',user.id).eq('date',today);
   todayPlanCacheGPT=pl||[];
@@ -1987,15 +2040,50 @@ function parseSetsRepsGPT(sr){
   if(!m)return{sets:3,repsLabel:'12'};
   return{sets:Math.max(1,Math.min(12,+m[1]||3)),repsLabel:m[2].trim()||'12'};
 }
+function parseCardioMinutesGPT(sr){
+  const m=String(sr||'').match(/(\d+)/);
+  return m?+m[1]:null;
+}
+let cardioTimersGPT={};
 async function startWorkoutGPT(sessionId,planningId,sessionName){
   if(!user||!sessionId)return;
   await ensureTrainingDataGPT();
   const exos=programGPT.filter(p=>p.session_id===sessionId);
   if(!exos.length){toastGPT('Cette séance ne contient aucun exercice','error');return;}
   activeWorkoutGPT={sessionId,planningId,exos};
+  clearAllCardioTimersGPT();
   document.getElementById('workoutTitleGPT').textContent=sessionName||sessionsGPT.find(s=>s.id===sessionId)?.name||'Séance';
   document.getElementById('workoutSubtitleGPT').textContent=`${exos.length} exercice${exos.length>1?'s':''}`;
   document.getElementById('workoutExercisesGPT').innerHTML=exos.map((pe,ei)=>{
+    const cardio=pe.exercises?.muscle_group==='Cardio';
+    const demoLink=pe.exercises?.demo_url?` <a href="${escapeHtml(pe.exercises.demo_url)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:400;color:var(--emerald-hi);text-decoration:none;margin-left:8px">Voir la démo ↗</a>`:'';
+    if(cardio){
+      const plannedMin=parseCardioMinutesGPT(pe.sets_reps);
+      return `<div class="card exerciseCard" data-exo-idx="${ei}" data-cardio="1">
+        <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}${demoLink}</h3><p>Renseigne la durée, l'intensité et les autres paramètres si besoin${plannedMin?` — prévu ${plannedMin} min`:''}</p></div></div>
+        <div class="setRows">
+          <div class="cardioTimerRow">
+            <div class="cardioTimerDisplay" id="cardioTimerDisplay${ei}">00:00</div>
+            <button type="button" class="ghostSm" id="cardioTimerBtn${ei}" onclick="toggleCardioTimerGPT(${ei})">▶ Démarrer</button>
+            <button type="button" class="dangerSm" onclick="stopCardioTimerGPT(${ei})">■ Stop</button>
+          </div>
+          <div class="threeCols">
+            <input class="fieldInput cardioDurationFieldGPT" type="number" min="1" placeholder="Durée (min)" value="${plannedMin||''}">
+            <select class="fieldSelect cardioIntensityFieldGPT">
+              <option value="">Intensité</option>
+              <option value="faible">Faible</option>
+              <option value="moyenne">Moyenne</option>
+              <option value="haute">Haute</option>
+            </select>
+            <input class="fieldInput cardioDistanceFieldGPT" type="number" step="0.1" placeholder="Distance (km)">
+          </div>
+          <div class="twoCols" style="margin-top:8px">
+            <input class="fieldInput cardioInclineFieldGPT" type="number" step="0.5" placeholder="Inclinaison (%)">
+            <input class="fieldInput cardioFloorsFieldGPT" type="number" placeholder="Étages">
+          </div>
+        </div>
+      </div>`;
+    }
     const {sets,repsLabel}=parseSetsRepsGPT(pe.sets_reps);
     const rows=Array.from({length:sets},(_,si)=>`
       <div class="setRow">
@@ -2005,7 +2093,7 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
         <button type="button" class="checkSet" onclick="toggleSetDoneGPT(this)">✓</button>
       </div>`).join('');
     return `<div class="card exerciseCard" data-exo-idx="${ei}">
-      <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}${pe.exercises?.demo_url?` <a href="${escapeHtml(pe.exercises.demo_url)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:400;color:var(--emerald-hi);text-decoration:none;margin-left:8px">Voir la démo ↗</a>`:''}</h3><p>${escapeHtml(pe.sets_reps||'')}</p></div></div>
+      <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}${demoLink}</h3><p>${escapeHtml(pe.sets_reps||'')}</p></div></div>
       <div class="setRows">${rows}</div>
     </div>`;
   }).join('');
@@ -2017,13 +2105,72 @@ function toggleSetDoneGPT(btn){
   btn.style.background=done?'var(--emerald)':'';
   btn.style.color=done?'#fff':'';
 }
+/* Timer cardio play/pause/stop. À l'arrêt (stop), le temps réel remplace
+   la durée prévue dans le champ, même flux ensuite que la saisie manuelle. */
+function formatTimerGPT(ms){
+  const total=Math.floor(ms/1000);
+  const m=Math.floor(total/60),s=total%60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function toggleCardioTimerGPT(ei){
+  const state=cardioTimersGPT[ei]||(cardioTimersGPT[ei]={elapsedMs:0,running:false,intervalId:null,startTs:0});
+  const btn=document.getElementById(`cardioTimerBtn${ei}`);
+  if(state.running){
+    clearInterval(state.intervalId);
+    state.elapsedMs+=Date.now()-state.startTs;
+    state.running=false;
+    if(btn)btn.textContent='▶ Reprendre';
+    return;
+  }
+  state.startTs=Date.now();
+  state.running=true;
+  if(btn)btn.textContent='⏸ Pause';
+  state.intervalId=setInterval(()=>{
+    const elapsed=state.elapsedMs+(Date.now()-state.startTs);
+    const disp=document.getElementById(`cardioTimerDisplay${ei}`);
+    if(disp)disp.textContent=formatTimerGPT(elapsed);
+    const card=document.querySelector(`.exerciseCard[data-exo-idx="${ei}"]`);
+    const durInput=card?.querySelector('.cardioDurationFieldGPT');
+    if(durInput)durInput.value=Math.round(elapsed/60000);
+  },1000);
+}
+function stopCardioTimerGPT(ei){
+  const state=cardioTimersGPT[ei];if(!state)return;
+  if(state.running){clearInterval(state.intervalId);state.elapsedMs+=Date.now()-state.startTs;state.running=false;}
+  const finalMs=state.elapsedMs;
+  const finalMin=Math.round(finalMs/60000);
+  const card=document.querySelector(`.exerciseCard[data-exo-idx="${ei}"]`);
+  const durInput=card?.querySelector('.cardioDurationFieldGPT');
+  if(durInput&&finalMin>0)durInput.value=finalMin;
+  const disp=document.getElementById(`cardioTimerDisplay${ei}`);
+  if(disp)disp.textContent=formatTimerGPT(finalMs);
+  const btn=document.getElementById(`cardioTimerBtn${ei}`);
+  if(btn)btn.textContent='▶ Démarrer';
+  state.elapsedMs=0;
+}
+function clearAllCardioTimersGPT(){
+  Object.values(cardioTimersGPT).forEach(s=>{if(s.intervalId)clearInterval(s.intervalId);});
+  cardioTimersGPT={};
+}
 async function finishWorkoutGPT(){
   if(!activeWorkoutGPT||!user)return;
+  clearAllCardioTimersGPT();
   const cards=[...document.getElementById('workoutExercisesGPT').children];
-  let savedCount=0;
+  let savedCount=0,totalSetsGPT=0,totalCardioKcalGPT=0;
   for(let ei=0;ei<activeWorkoutGPT.exos.length;ei++){
     const pe=activeWorkoutGPT.exos[ei];
     const card=cards[ei];if(!card)continue;
+    if(pe.exercises?.muscle_group==='Cardio'){
+      const duration_min=+(card.querySelector('.cardioDurationFieldGPT')?.value||'').trim()||0;
+      if(!duration_min)continue;
+      const cardio_intensity=card.querySelector('.cardioIntensityFieldGPT')?.value||null;
+      const distance_km=+(card.querySelector('.cardioDistanceFieldGPT')?.value||'')||null;
+      const incline_pct=+(card.querySelector('.cardioInclineFieldGPT')?.value||'')||null;
+      const floors=+(card.querySelector('.cardioFloorsFieldGPT')?.value||'')||null;
+      const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,duration_min,cardio_intensity,distance_km,incline_pct,floors,weight:null,sets:null,reps:null});
+      if(!error){savedCount++;totalCardioKcalGPT+=Math.round(duration_min*kcalPerMinForLevelGPT(cardio_intensity));}
+      continue;
+    }
     const weights=[...card.querySelectorAll('.wFieldGPT')].map(x=>x.value.trim());
     const reps=[...card.querySelectorAll('.rFieldGPT')].map(x=>x.value.trim());
     const filledIdx=weights.map((w,i)=>(w||reps[i])?i:-1).filter(i=>i>=0);
@@ -2031,15 +2178,35 @@ async function finishWorkoutGPT(){
     const weightStr=filledIdx.map(i=>weights[i]||'0').join(',');
     const repsStr=filledIdx.map(i=>reps[i]||'').join(',');
     const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,weight:weightStr,sets:filledIdx.length,reps:repsStr});
-    if(!error)savedCount++;
+    if(!error){savedCount++;totalSetsGPT+=filledIdx.length;}
   }
+  const kcalBurnedGPT=estimateSessionKcalGPT(totalSetsGPT,totalCardioKcalGPT);
   if(activeWorkoutGPT.planningId){
-    await sb.from('planning').update({done:true}).eq('id',activeWorkoutGPT.planningId);
+    await sb.from('planning').update({done:true,kcal_burned:kcalBurnedGPT||null}).eq('id',activeWorkoutGPT.planningId);
+  }else if(kcalBurnedGPT){
+    await sb.from('planning').insert({user_id:user.id,session_id:activeWorkoutGPT.sessionId,date:todayLocalGPT(),done:true,kcal_burned:kcalBurnedGPT});
   }
-  toastGPT(savedCount?`Séance enregistrée (${savedCount} exercice${savedCount>1?'s':''})`:'Séance terminée, aucune série renseignée');
+  toastGPT(savedCount?`Séance enregistrée (${savedCount} exercice${savedCount>1?'s':''})${kcalBurnedGPT?` — ≈${kcalBurnedGPT} kcal brûlées`:''}`:'Séance terminée, aucune série renseignée');
   activeWorkoutGPT=null;
   showPage('training');
   loadDashboardGPT();
+}
+
+/* Estimation kcal brûlées : mêmes kcal/min par intensité que l'algo nutrition
+   (low:5 · med:7 · high:9). Force = séries × 2,5 min × intensité de profil.
+   Cardio = durée réelle × intensité choisie pour CET exercice (faible/moyenne/haute),
+   avec repli sur l'intensité du profil si non renseignée. */
+function kcalPerMinGPT(){
+  return {low:5,med:7,high:9}[profile?.intensity]||7;
+}
+function kcalPerMinForLevelGPT(level){
+  return {faible:5,moyenne:7,haute:9}[level]||kcalPerMinGPT();
+}
+function estimateSessionKcalGPT(totalSets,cardioKcal){
+  if(!profile)return 0;
+  const strengthKcal=(totalSets||0)*2.5*kcalPerMinGPT();
+  const total=strengthKcal+(cardioKcal||0);
+  return total?Math.round(total):0;
 }
 
 async function loadPlanningGPT(){
@@ -2094,12 +2261,13 @@ async function deletePlanningGPT(id){
 async function loadProgressGPT(){
   if(!user){renderProgressDemoGPT();return}
   await ensureTrainingDataGPT();
-  const [{data:w},{data:b},{data:logs}]=await Promise.all([
+  const [{data:w},{data:b},{data:logs},{data:plan}]=await Promise.all([
     sb.from('weight_logs').select('*').eq('user_id',user.id).order('date'),
     sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date'),
-    sb.from('workout_logs').select('*').eq('user_id',user.id)
+    sb.from('workout_logs').select('*').eq('user_id',user.id),
+    sb.from('planning').select('kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null)
   ]);
-  updateProgressMetricsGPT(w||[],b||[],logs||[]);
+  updateProgressMetricsGPT(w||[],b||[],logs||[],plan||[]);
   drawWeightGPT(w||[]);drawBfGPT(b||[]);
   const uniq=[...new Map(programGPT.map(p=>[p.exercise_id,p.exercises])).values()];
   const sel=document.getElementById('progressExerciseGPT');
@@ -2109,17 +2277,22 @@ async function loadProgressGPT(){
 function renderProgressDemoGPT(){
   const w=[{date:'2026-07-15',weight:75.1},{date:'2026-07-22',weight:74.8},{date:'2026-07-29',weight:74.5},{date:'2026-08-05',weight:74.3},{date:'2026-08-13',weight:74.2}];
   const b=[{date:'2026-07-15',bodyfat_pct:17.2},{date:'2026-08-13',bodyfat_pct:16.7}];
-  updateProgressMetricsGPT(w,b,[1,2,3,4]);drawWeightGPT(w);drawBfGPT(b);
+  updateProgressMetricsGPT(w,b,[1,2,3,4],[{kcal_burned:340},{kcal_burned:290}]);drawWeightGPT(w);drawBfGPT(b);
   document.getElementById('progressExerciseGPT').innerHTML='<option>Développé couché</option>';
   drawExerciseGPT([{date:'01/08',v:72},{date:'04/08',v:74},{date:'08/08',v:76},{date:'12/08',v:78}]);
 }
-function updateProgressMetricsGPT(w,b,logs){
+function updateProgressMetricsGPT(w,b,logs,plan){
   const mw=document.getElementById('metricWeight'),mb=document.getElementById('metricBf');
   if(w.length){mw.textContent=`${w[w.length-1].weight} kg`;const d=+(w[w.length-1].weight-w[0].weight).toFixed(1);document.getElementById('metricWeightDelta').textContent=`${d>0?'+':''}${d} kg sur la période`}
   else mw.textContent='—';
   if(b.length){mb.textContent=`${b[b.length-1].bodyfat_pct}%`;const d=+(b[b.length-1].bodyfat_pct-b[0].bodyfat_pct).toFixed(1);document.getElementById('metricBfDelta').textContent=`${d>0?'+':''}${d}% sur la période`}
   else mb.textContent='—';
   document.getElementById('metricSessions').textContent=logs.length;
+  const kcalEl=document.getElementById('metricKcalBurned');
+  if(kcalEl){
+    const total=(plan||[]).reduce((a,p)=>a+(+p.kcal_burned||0),0);
+    kcalEl.textContent=total?`${total.toLocaleString('fr-FR')}`:'—';
+  }
 }
 function makeLineChart(ctx,old,labels,data,label){
   if(old)old.destroy();
@@ -2131,10 +2304,14 @@ async function loadExerciseProgressGPT(){
   if(!user)return;
   const id=document.getElementById('progressExerciseGPT').value;if(!id)return;
   const {data}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',id).order('date');
-  drawExerciseGPT((data||[]).map(l=>({date:l.date,v:maxWeightGPT(l.weight)})));
+  if(isCardioExerciseGPT(id)){
+    drawExerciseGPT((data||[]).map(l=>({date:l.date,v:+l.duration_min||0})),'Durée (min)');
+  }else{
+    drawExerciseGPT((data||[]).map(l=>({date:l.date,v:maxWeightGPT(l.weight)})),'Charge');
+  }
 }
 function maxWeightGPT(w){const a=String(w||'').split(',').map(x=>parseFloat(x.trim())).filter(Number.isFinite);return a.length?Math.max(...a):0}
-function drawExerciseGPT(logs){exerciseChartGPT=makeLineChart(document.getElementById('exerciseChartGPT'),exerciseChartGPT,logs.map(x=>x.date),logs.map(x=>x.v),'Charge')}
+function drawExerciseGPT(logs,label){exerciseChartGPT=makeLineChart(document.getElementById('exerciseChartGPT'),exerciseChartGPT,logs.map(x=>x.date),logs.map(x=>x.v),label||'Charge')}
 
 async function loadProfileGPT(){
   const p=profile||defaultProfile();
