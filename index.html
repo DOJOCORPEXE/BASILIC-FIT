@@ -345,6 +345,7 @@ button{cursor:pointer}
 .setIndex{font-size:10px;color:var(--muted);text-align:center}
 .setField{border:1px solid var(--line);background:rgba(15,15,15,.78);color:var(--text);border-radius:10px;padding:9px 10px;width:100%}
 .checkSet{width:38px;height:38px;border-radius:10px;border:1px solid rgba(18,164,136,.24);background:var(--emerald-soft);color:var(--emerald-hi)}
+.setLastGPT{font-size:10.5px;color:var(--muted);padding-left:42px;margin-top:-3px}
 .calendarPremium{padding:20px}
 .calendarHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .calendarHead button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:#bbb}
@@ -389,6 +390,7 @@ button{cursor:pointer}
   .twoCols,.threeCols{grid-template-columns:1fr}
   .metricTiles{grid-template-columns:1fr 1fr}
   .setRow{grid-template-columns:28px 1fr 1fr 38px}
+  .setLastGPT{padding-left:36px}
 }
 
 
@@ -423,6 +425,11 @@ button{cursor:pointer}
 .collapsibleHistory.open #bfHistoryProfileGPT{display:block;animation:foldIn .22s var(--ease-premium)}
 .collapsibleHistory.open #logFormDetailsGPT{display:grid;gap:10px;animation:foldIn .22s var(--ease-premium)}
 .collapsibleHistory.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
+.exoProgressGroup{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02);padding:14px 16px;margin-top:10px}
+.exoProgressGroup .sectionTitle{margin:0;cursor:pointer;user-select:none}
+.exoProgressGroup .exoSeanceHistoryGPT{display:none;overflow:hidden;margin-top:10px}
+.exoProgressGroup.open .exoSeanceHistoryGPT{display:grid;gap:7px;animation:foldIn .22s var(--ease-premium)}
+.exoProgressGroup.open .dayToggle{transform:rotate(180deg);color:var(--emerald-hi);border-color:rgba(18,164,136,.22)}
 
 
 .macroTileBar{
@@ -939,10 +946,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 
     <section class="card chartCard" style="margin-top:18px">
       <div class="sectionTitle">
-        <div><div class="sectionKicker">Performance</div><h2>Progression exercice</h2><p>Sélectionne un exercice de ton programme.</p></div>
-        <select id="progressExerciseGPT" class="fieldSelect" style="width:min(280px,100%)" onchange="loadExerciseProgressGPT()"></select>
+        <div><div class="sectionKicker">Performance</div><h2>Progression par séance</h2><p>Sélectionne une séance : poids × reps par exercice, séance par séance.</p></div>
+        <select id="progressSessionGPT" class="fieldSelect" style="width:min(280px,100%)" onchange="loadSessionProgressGPT()"></select>
       </div>
-      <div class="canvasWrap"><canvas id="exerciseChartGPT"></canvas></div>
+      <div id="progressSessionExosGPT" style="margin-top:6px"></div>
     </section>
   </section>
 
@@ -1971,6 +1978,7 @@ async function deleteAccountGPT(){
 function toggleLegalGPT(id){document.getElementById(id).classList.toggle('show')}
 
 let allExercisesGPT=[],sessionsGPT=[],programGPT=[],planningGPT=[],weightChartGPT=null,bfChartGPT=null,exerciseChartGPT=null,burnedKcalChartGPT=null,todayPlanCacheGPT=[],activeWorkoutGPT=null;
+let exoProgressChartsGPT={},exoProgressDataGPT={};
 let calMonthGPT=new Date(); calMonthGPT.setDate(1);
 let calSelectedGPT=todayLocalGPT();
 
@@ -2080,6 +2088,11 @@ function parseCardioMinutesGPT(sr){
   return m?+m[1]:null;
 }
 let cardioTimersGPT={};
+function shortDateFRGPT(d){
+  if(!d)return'';
+  const [y,m,day]=d.split('-');
+  return `${day}/${m}`;
+}
 async function startWorkoutGPT(sessionId,planningId,sessionName){
   if(!user||!sessionId)return;
   await ensureTrainingDataGPT();
@@ -2087,6 +2100,26 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
   if(!exos.length){toastGPT('Cette séance ne contient aucun exercice','error');return;}
   activeWorkoutGPT={sessionId,planningId,exos};
   clearAllCardioTimersGPT();
+  const todayStr=todayLocalGPT();
+  /* Dernière performance connue par exercice (hors logs d'aujourd'hui, pour
+     ne pas se comparer à soi-même si la séance est reprise/refaite le même
+     jour) : affichée sous chaque série pour voir la progression en direct. */
+  const strengthIds=[...new Set(exos.filter(pe=>pe.exercises?.muscle_group!=='Cardio').map(pe=>pe.exercise_id))];
+  let lastPerfGPT={};
+  if(strengthIds.length){
+    const {data:lastLogs}=await sb.from('workout_logs').select('exercise_id,date,weight,reps')
+      .eq('user_id',user.id).in('exercise_id',strengthIds).neq('date',todayStr)
+      .order('date',{ascending:false}).order('created_at',{ascending:false});
+    (lastLogs||[]).forEach(l=>{
+      if(!lastPerfGPT[l.exercise_id]){
+        lastPerfGPT[l.exercise_id]={
+          date:l.date,
+          weights:String(l.weight||'').split(',').map(x=>x.trim()),
+          reps:String(l.reps||'').split(',').map(x=>x.trim())
+        };
+      }
+    });
+  }
   document.getElementById('workoutTitleGPT').textContent=sessionName||sessionsGPT.find(s=>s.id===sessionId)?.name||'Séance';
   document.getElementById('workoutSubtitleGPT').textContent=`${exos.length} exercice${exos.length>1?'s':''}`;
   document.getElementById('workoutExercisesGPT').innerHTML=exos.map((pe,ei)=>{
@@ -2120,13 +2153,18 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
       </div>`;
     }
     const {sets,repsLabel}=parseSetsRepsGPT(pe.sets_reps);
-    const rows=Array.from({length:sets},(_,si)=>`
+    const last=lastPerfGPT[pe.exercise_id];
+    const rows=Array.from({length:sets},(_,si)=>{
+      const lw=last?.weights?.[si],lr=last?.reps?.[si];
+      const hint=(lw||lr)?`<div class="setLastGPT">Dernière fois (${shortDateFRGPT(last.date)}) : ${lw||'—'}kg × ${lr||'—'}</div>`:'';
+      return `
       <div class="setRow">
         <div class="setIndex">${si+1}</div>
         <input class="setField wFieldGPT" type="number" step="0.5" placeholder="kg">
         <input class="setField rFieldGPT" type="text" placeholder="${escapeHtml(repsLabel)}">
         <button type="button" class="checkSet" onclick="toggleSetDoneGPT(this)">✓</button>
-      </div>`).join('');
+      </div>${hint}`;
+    }).join('');
     return `<div class="card exerciseCard" data-exo-idx="${ei}">
       <div class="exerciseHead"><div><h3>${escapeHtml(pe.exercises?.name||'Exercice')}${demoLink}</h3><p>${escapeHtml(pe.sets_reps||'')}</p></div></div>
       <div class="setRows">${rows}</div>
@@ -2341,18 +2379,77 @@ async function loadProgressGPT(){
   const byDateKcal=dailyBurnedKcalMapGPT(logs||[]);
   updateProgressMetricsGPT(w||[],b||[],logs||[],byDateKcal);
   drawWeightGPT(w||[]);drawBfGPT(b||[]);drawBurnedKcalGPT(byDateKcal);
-  const uniq=[...new Map(programGPT.map(p=>[p.exercise_id,p.exercises])).values()];
-  const sel=document.getElementById('progressExerciseGPT');
-  sel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Aucun exercice</option>';
-  if(uniq.length)loadExerciseProgressGPT(); else drawExerciseGPT([]);
+  const sel=document.getElementById('progressSessionGPT');
+  sel.innerHTML=sessionsGPT.length?sessionsGPT.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join(''):'<option value="">Aucune séance</option>';
+  if(sessionsGPT.length)loadSessionProgressGPT();
+  else document.getElementById('progressSessionExosGPT').innerHTML='<div class="empty">Aucune séance dans ton programme.</div>';
+}
+/* Progression par séance : pour la séance sélectionnée, un bloc repliable
+   par exercice (fermé par défaut) listant poids × reps séance par séance,
+   les plus récentes en premier — plutôt qu'un graphique isolé par exercice. */
+async function loadSessionProgressGPT(){
+  if(!user)return;
+  const sessionId=document.getElementById('progressSessionGPT').value;if(!sessionId)return;
+  const exos=programGPT.filter(p=>p.session_id===sessionId&&p.exercises?.muscle_group!=='Cardio');
+  const box=document.getElementById('progressSessionExosGPT');
+  Object.values(exoProgressChartsGPT).forEach(c=>c?.destroy());
+  exoProgressChartsGPT={};exoProgressDataGPT={};
+  if(!exos.length){box.innerHTML='<div class="empty">Aucun exercice de force dans cette séance.</div>';return;}
+  const exIds=[...new Set(exos.map(p=>p.exercise_id))];
+  const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).in('exercise_id',exIds)
+    .order('date',{ascending:false}).order('created_at',{ascending:false});
+  const logsByExoGPT={};
+  (logs||[]).forEach(l=>{(logsByExoGPT[l.exercise_id]=logsByExoGPT[l.exercise_id]||[]).push(l);});
+  box.innerHTML=exos.map(pe=>{
+    const exoLogs=(logsByExoGPT[pe.exercise_id]||[]).slice(0,12);
+    const count=exoLogs.length;
+    const meta=count?`${count} séance${count>1?'s':''} enregistrée${count>1?'s':''} · dernière le ${shortDateFRGPT(exoLogs[0].date)}`:'Aucun historique pour le moment';
+    /* Charge max par date (une valeur par jour, la plus haute si plusieurs
+       logs le même jour), triée chronologiquement pour le graphique — à ne
+       pas confondre avec exoLogs ci-dessus, trié récent → ancien pour la liste. */
+    const byDateMax={};
+    exoLogs.forEach(l=>{const mx=maxWeightGPT(l.weight);if(!(l.date in byDateMax)||mx>byDateMax[l.date])byDateMax[l.date]=mx;});
+    const chartDates=Object.keys(byDateMax).sort();
+    exoProgressDataGPT[pe.exercise_id]={dates:chartDates,values:chartDates.map(d=>byDateMax[d])};
+    const chartBox=count?`<div class="canvasWrap" style="height:130px;margin-top:10px"><canvas id="exoProgChart_${pe.exercise_id}"></canvas></div>`:'';
+    return `<div class="exoProgressGroup collapsibleHistory">
+      <div class="sectionTitle" onclick="toggleExoProgressGPT(this,'${pe.exercise_id}')">
+        <div><h3 style="margin:0;font-size:13px">${escapeHtml(pe.exercises?.name||'Exercice')}</h3><p style="margin:3px 0 0;color:var(--muted);font-size:10px">${meta}</p></div>
+        <div class="dayToggle" aria-label="Afficher ou masquer l'historique"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+      <div class="exoSeanceHistoryGPT">${chartBox}${exoLogs.map(l=>`<div class="listItemPremium"><div class="listMain"><b>${l.date}</b><span>${formatWorkoutGPT(l)}</span></div></div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+/* Le graphique par exercice n'est initialisé qu'à l'ouverture du bloc
+   (canvas à taille nulle tant que .exoSeanceHistoryGPT est display:none,
+   Chart.js rendrait un graphique vide/cassé s'il était créé avant). */
+function toggleExoProgressGPT(header,exerciseId){
+  const box=header.closest('.exoProgressGroup');if(!box)return;
+  const open=box.classList.toggle('open');
+  if(open&&!exoProgressChartsGPT[exerciseId]){
+    const d=exoProgressDataGPT[exerciseId];
+    if(d&&d.dates.length){
+      const ctx=document.getElementById(`exoProgChart_${exerciseId}`);
+      if(ctx)exoProgressChartsGPT[exerciseId]=makeLineChart(ctx,null,d.dates,d.values,'Charge max (kg)');
+    }
+  }
 }
 function renderProgressDemoGPT(){
   const w=[{date:'2026-07-15',weight:75.1},{date:'2026-07-22',weight:74.8},{date:'2026-07-29',weight:74.5},{date:'2026-08-05',weight:74.3},{date:'2026-08-13',weight:74.2}];
   const b=[{date:'2026-07-15',bodyfat_pct:17.2},{date:'2026-08-13',bodyfat_pct:16.7}];
   const byDateKcal={'2026-08-10':340,'2026-08-12':290,'2026-08-13':410};
   updateProgressMetricsGPT(w,b,[1,2,3,4],byDateKcal);drawWeightGPT(w);drawBfGPT(b);drawBurnedKcalGPT(byDateKcal);
-  document.getElementById('progressExerciseGPT').innerHTML='<option>Développé couché</option>';
-  drawExerciseGPT([{date:'01/08',v:72},{date:'04/08',v:74},{date:'08/08',v:76},{date:'12/08',v:78}]);
+  document.getElementById('progressSessionGPT').innerHTML='<option>Pec/Dos A</option>';
+  document.getElementById('progressSessionExosGPT').innerHTML=`<div class="exoProgressGroup collapsibleHistory open">
+    <div class="sectionTitle" onclick="toggleExoProgressGPT(this,'demo')">
+      <div><h3 style="margin:0;font-size:13px">Développé couché</h3><p style="margin:3px 0 0;color:var(--muted);font-size:10px">4 séances enregistrées · dernière le 12/08</p></div>
+      <div class="dayToggle" aria-label="Afficher ou masquer l'historique"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+    </div>
+    <div class="exoSeanceHistoryGPT"><div class="canvasWrap" style="height:130px;margin-top:10px"><canvas id="exoProgChart_demo"></canvas></div><div class="listItemPremium"><div class="listMain"><b>2026-08-12</b><span>78kg × 8 · 78kg × 8 · 76kg × 8</span></div></div><div class="listItemPremium"><div class="listMain"><b>2026-08-08</b><span>76kg × 8 · 76kg × 8 · 74kg × 8</span></div></div></div>
+  </div>`;
+  exoProgressDataGPT={demo:{dates:['2026-07-30','2026-08-04','2026-08-08','2026-08-12'],values:[74,76,76,78]}};
+  exoProgressChartsGPT={demo:makeLineChart(document.getElementById('exoProgChart_demo'),null,exoProgressDataGPT.demo.dates,exoProgressDataGPT.demo.values,'Charge max (kg)')};
 }
 function updateProgressMetricsGPT(w,b,logs,byDateKcal){
   const mw=document.getElementById('metricWeight'),mb=document.getElementById('metricBf');
@@ -2382,7 +2479,7 @@ function drawBurnedKcalGPT(byDate){
 }
 async function loadExerciseProgressGPT(){
   if(!user)return;
-  const id=document.getElementById('progressExerciseGPT').value;if(!id)return;
+  const id=document.getElementById('progressExerciseGPT')?.value;if(!id)return;
   const {data}=await sb.from('workout_logs').select('*').eq('user_id',user.id).eq('exercise_id',id).order('date');
   if(isCardioExerciseGPT(id)){
     drawExerciseGPT((data||[]).map(l=>({date:l.date,v:+l.duration_min||0})),'Durée (min)');
