@@ -1438,9 +1438,10 @@ async function loadDashboardGPT(){
   if(dashDatePill)dashDatePill.textContent=formatDatePillFR(today);
   document.getElementById('dashSessionsWeekGPT').textContent=profile?.sessions_per_week??'—';
   if(!user)return;
-  const [{data:wlogs},{data:plan}]=await Promise.all([
+  const [{data:wlogs},{data:plan},{data:todayLogs}]=await Promise.all([
     sb.from('weight_logs').select('*').eq('user_id',user.id).order('date',{ascending:true}),
-    sb.from('planning').select('*,sessions(name)').eq('user_id',user.id).eq('date',today)
+    sb.from('planning').select('*,sessions(name)').eq('user_id',user.id).eq('date',today),
+    sb.from('workout_logs').select('date,sets,duration_min,cardio_intensity').eq('user_id',user.id).eq('date',today)
   ]);
   const weight=(wlogs&&wlogs.length)?wlogs[wlogs.length-1].weight:profile?.weight_kg;
   document.getElementById('dashWeightGPT').textContent=weight?String(weight).replace('.',','):'—';
@@ -1461,7 +1462,7 @@ async function loadDashboardGPT(){
   const entry=plan?.[0];
   const dashBurnedEl=document.getElementById('dashBurned');
   if(dashBurnedEl){
-    const burnedToday=(plan||[]).reduce((a,p)=>a+(+p.kcal_burned||0),0);
+    const burnedToday=dailyBurnedKcalMapGPT(todayLogs||[])[today]||0;
     dashBurnedEl.textContent=burnedToday?burnedToday.toLocaleString('fr-FR'):'—';
   }
   if(entry){
@@ -1523,14 +1524,13 @@ async function loadNutrition(){
     renderDemoNutrition();
     return;
   }
-  const [{data:meals,error},{data:planAll}]=await Promise.all([
+  const [{data:meals,error},{data:allLogs}]=await Promise.all([
     sb.from('meals').select('*').eq('user_id',user.id).order('date',{ascending:false}).order('created_at'),
-    sb.from('planning').select('date,kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null)
+    sb.from('workout_logs').select('date,sets,duration_min,cardio_intensity').eq('user_id',user.id)
   ]);
   if(error){console.error(error);return renderDemoNutrition()}
   lastMeals=meals||[];
-  const burnedByDateGPT={};
-  (planAll||[]).forEach(p=>{burnedByDateGPT[p.date]=(burnedByDateGPT[p.date]||0)+(+p.kcal_burned||0);});
+  const burnedByDateGPT=dailyBurnedKcalMapGPT(allLogs||[]);
   renderNutrition(lastMeals,date,burnedByDateGPT);
 }
 function renderDemoNutrition(){
@@ -1847,18 +1847,19 @@ async function loadWorkoutHistoryGPT(){
 async function addWorkoutLogGPT(){
   if(!user)return toastGPT('Connexion requise.','error');
   const exercise_id=document.getElementById('logExoGPT').value;if(!exercise_id)return;
+  const dateStr=todayLocalGPT();
   let row;
   if(isCardioExerciseGPT(exercise_id)){
     const duration_min=+document.getElementById('logDurationGPT').value||0;
     if(!duration_min)return toastGPT('Indique une durée en minutes.','error');
-    row={user_id:user.id,exercise_id,duration_min,
+    row={user_id:user.id,exercise_id,date:dateStr,duration_min,
       cardio_intensity:document.getElementById('logCardioIntensityGPT').value||null,
       distance_km:+document.getElementById('logCardioDistanceGPT').value||null,
       incline_pct:+document.getElementById('logCardioInclineGPT').value||null,
       floors:+document.getElementById('logCardioFloorsGPT').value||null,
       weight:null,sets:null,reps:null};
   }else{
-    row={user_id:user.id,exercise_id,weight:document.getElementById('logWeightGPT').value,
+    row={user_id:user.id,exercise_id,date:dateStr,weight:document.getElementById('logWeightGPT').value,
       sets:+document.getElementById('logSetsGPT').value||0,reps:document.getElementById('logRepsGPT').value};
   }
   const {error}=await sb.from('workout_logs').insert(row);if(error)return toastGPT(error.message,'error');
@@ -2189,8 +2190,9 @@ function clearAllCardioTimersGPT(){
 async function finishWorkoutGPT(){
   if(!activeWorkoutGPT||!user)return;
   clearAllCardioTimersGPT();
+  const dateStr=todayLocalGPT();
   const cards=[...document.getElementById('workoutExercisesGPT').children];
-  let savedCount=0,totalSetsGPT=0,totalCardioKcalGPT=0;
+  let savedCount=0;
   for(let ei=0;ei<activeWorkoutGPT.exos.length;ei++){
     const pe=activeWorkoutGPT.exos[ei];
     const card=cards[ei];if(!card)continue;
@@ -2201,8 +2203,8 @@ async function finishWorkoutGPT(){
       const distance_km=+(card.querySelector('.cardioDistanceFieldGPT')?.value||'')||null;
       const incline_pct=+(card.querySelector('.cardioInclineFieldGPT')?.value||'')||null;
       const floors=+(card.querySelector('.cardioFloorsFieldGPT')?.value||'')||null;
-      const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,duration_min,cardio_intensity,distance_km,incline_pct,floors,weight:null,sets:null,reps:null});
-      if(!error){savedCount++;totalCardioKcalGPT+=Math.round(duration_min*kcalPerMinForLevelGPT(cardio_intensity));}
+      const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,date:dateStr,duration_min,cardio_intensity,distance_km,incline_pct,floors,weight:null,sets:null,reps:null});
+      if(!error)savedCount++;
       continue;
     }
     const weights=[...card.querySelectorAll('.wFieldGPT')].map(x=>x.value.trim());
@@ -2211,19 +2213,55 @@ async function finishWorkoutGPT(){
     if(!filledIdx.length)continue;
     const weightStr=filledIdx.map(i=>weights[i]||'0').join(',');
     const repsStr=filledIdx.map(i=>reps[i]||'').join(',');
-    const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,weight:weightStr,sets:filledIdx.length,reps:repsStr});
-    if(!error){savedCount++;totalSetsGPT+=filledIdx.length;}
+    const {error}=await sb.from('workout_logs').insert({user_id:user.id,exercise_id:pe.exercise_id,date:dateStr,weight:weightStr,sets:filledIdx.length,reps:repsStr});
+    if(!error)savedCount++;
   }
-  const kcalBurnedGPT=estimateSessionKcalGPT(totalSetsGPT,totalCardioKcalGPT);
+  const kcalBurnedGPT=await computeSessionKcalFromLogsGPT(activeWorkoutGPT.exos,dateStr);
   if(activeWorkoutGPT.planningId){
     await sb.from('planning').update({done:true,kcal_burned:kcalBurnedGPT||null}).eq('id',activeWorkoutGPT.planningId);
   }else if(kcalBurnedGPT){
-    await sb.from('planning').insert({user_id:user.id,session_id:activeWorkoutGPT.sessionId,date:todayLocalGPT(),done:true,kcal_burned:kcalBurnedGPT});
+    await sb.from('planning').insert({user_id:user.id,session_id:activeWorkoutGPT.sessionId,date:dateStr,done:true,kcal_burned:kcalBurnedGPT});
   }
   toastGPT(savedCount?`Séance enregistrée (${savedCount} exercice${savedCount>1?'s':''})${kcalBurnedGPT?` — ≈${kcalBurnedGPT} kcal brûlées`:''}`:'Séance terminée, aucune série renseignée');
   activeWorkoutGPT=null;
   showPage('training');
   loadDashboardGPT();
+}
+/* Recalcule le total kcal brûlées de LA séance (ses exercices, la date du jour)
+   à partir des workout_logs réellement en base, plutôt que depuis le seul
+   formulaire de cet appel. Corrige le cas où "Terminer" est cliqué plusieurs
+   fois pour une même séance (ex: exercice ajouté après coup) : avant, chaque
+   clic écrasait kcal_burned avec le sous-total de ce seul clic. */
+async function computeSessionKcalFromLogsGPT(exos,dateStr){
+  if(!user||!exos?.length)return 0;
+  const exerciseIds=[...new Set(exos.map(pe=>pe.exercise_id))];
+  const {data,error}=await sb.from('workout_logs').select('sets,duration_min,cardio_intensity')
+    .eq('user_id',user.id).eq('date',dateStr).in('exercise_id',exerciseIds);
+  if(error||!data)return 0;
+  let totalSets=0,totalCardioKcal=0;
+  data.forEach(l=>{
+    if(l.sets)totalSets+=l.sets;
+    else if(l.duration_min)totalCardioKcal+=Math.round(l.duration_min*kcalPerMinForLevelGPT(l.cardio_intensity));
+  });
+  return estimateSessionKcalGPT(totalSets,totalCardioKcal);
+}
+/* Total kcal brûlées par jour, à partir de TOUS les workout_logs réels
+   (séances guidées + exercices ajoutés à la main via Suivi confondus).
+   Remplace planning.kcal_burned comme source pour les totaux du jour/période
+   (Dashboard, Nutrition, Progrès) : un ajout manuel hors séance compte
+   désormais dans le total du jour, alors qu'avant seule une séance terminée
+   via "Démarrer" écrivait quelque chose dans planning. */
+function dailyBurnedKcalMapGPT(logs){
+  const byDate={};
+  (logs||[]).forEach(l=>{
+    const d=l.date;if(!d)return;
+    if(!byDate[d])byDate[d]={sets:0,cardio:0};
+    if(l.sets)byDate[d].sets+=l.sets;
+    else if(l.duration_min)byDate[d].cardio+=Math.round(l.duration_min*kcalPerMinForLevelGPT(l.cardio_intensity));
+  });
+  const out={};
+  Object.keys(byDate).forEach(d=>{out[d]=estimateSessionKcalGPT(byDate[d].sets,byDate[d].cardio);});
+  return out;
 }
 
 /* Estimation kcal brûlées : mêmes kcal/min par intensité que l'algo nutrition
@@ -2295,14 +2333,14 @@ async function deletePlanningGPT(id){
 async function loadProgressGPT(){
   if(!user){renderProgressDemoGPT();return}
   await ensureTrainingDataGPT();
-  const [{data:w},{data:b},{data:logs},{data:plan}]=await Promise.all([
+  const [{data:w},{data:b},{data:logs}]=await Promise.all([
     sb.from('weight_logs').select('*').eq('user_id',user.id).order('date'),
     sb.from('bodyfat_logs').select('*').eq('user_id',user.id).order('date'),
-    sb.from('workout_logs').select('*').eq('user_id',user.id),
-    sb.from('planning').select('date,kcal_burned').eq('user_id',user.id).not('kcal_burned','is',null).order('date')
+    sb.from('workout_logs').select('*').eq('user_id',user.id)
   ]);
-  updateProgressMetricsGPT(w||[],b||[],logs||[],plan||[]);
-  drawWeightGPT(w||[]);drawBfGPT(b||[]);drawBurnedKcalGPT(plan||[]);
+  const byDateKcal=dailyBurnedKcalMapGPT(logs||[]);
+  updateProgressMetricsGPT(w||[],b||[],logs||[],byDateKcal);
+  drawWeightGPT(w||[]);drawBfGPT(b||[]);drawBurnedKcalGPT(byDateKcal);
   const uniq=[...new Map(programGPT.map(p=>[p.exercise_id,p.exercises])).values()];
   const sel=document.getElementById('progressExerciseGPT');
   sel.innerHTML=uniq.length?uniq.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join(''):'<option value="">Aucun exercice</option>';
@@ -2311,12 +2349,12 @@ async function loadProgressGPT(){
 function renderProgressDemoGPT(){
   const w=[{date:'2026-07-15',weight:75.1},{date:'2026-07-22',weight:74.8},{date:'2026-07-29',weight:74.5},{date:'2026-08-05',weight:74.3},{date:'2026-08-13',weight:74.2}];
   const b=[{date:'2026-07-15',bodyfat_pct:17.2},{date:'2026-08-13',bodyfat_pct:16.7}];
-  const plan=[{date:'2026-08-10',kcal_burned:340},{date:'2026-08-12',kcal_burned:290},{date:'2026-08-13',kcal_burned:410}];
-  updateProgressMetricsGPT(w,b,[1,2,3,4],plan);drawWeightGPT(w);drawBfGPT(b);drawBurnedKcalGPT(plan);
+  const byDateKcal={'2026-08-10':340,'2026-08-12':290,'2026-08-13':410};
+  updateProgressMetricsGPT(w,b,[1,2,3,4],byDateKcal);drawWeightGPT(w);drawBfGPT(b);drawBurnedKcalGPT(byDateKcal);
   document.getElementById('progressExerciseGPT').innerHTML='<option>Développé couché</option>';
   drawExerciseGPT([{date:'01/08',v:72},{date:'04/08',v:74},{date:'08/08',v:76},{date:'12/08',v:78}]);
 }
-function updateProgressMetricsGPT(w,b,logs,plan){
+function updateProgressMetricsGPT(w,b,logs,byDateKcal){
   const mw=document.getElementById('metricWeight'),mb=document.getElementById('metricBf');
   if(w.length){mw.textContent=`${w[w.length-1].weight} kg`;const d=+(w[w.length-1].weight-w[0].weight).toFixed(1);document.getElementById('metricWeightDelta').textContent=`${d>0?'+':''}${d} kg sur la période`}
   else mw.textContent='—';
@@ -2325,7 +2363,7 @@ function updateProgressMetricsGPT(w,b,logs,plan){
   document.getElementById('metricSessions').textContent=logs.length;
   const kcalEl=document.getElementById('metricKcalBurned');
   if(kcalEl){
-    const total=(plan||[]).reduce((a,p)=>a+(+p.kcal_burned||0),0);
+    const total=Object.values(byDateKcal||{}).reduce((a,v)=>a+(+v||0),0);
     kcalEl.textContent=total?`${total.toLocaleString('fr-FR')}`:'—';
   }
 }
@@ -2335,9 +2373,8 @@ function makeLineChart(ctx,old,labels,data,label){
 }
 function drawWeightGPT(logs){weightChartGPT=makeLineChart(document.getElementById('weightChartGPT'),weightChartGPT,logs.map(x=>x.date),logs.map(x=>+x.weight),'Poids')}
 function drawBfGPT(logs){bfChartGPT=makeLineChart(document.getElementById('bodyfatChartGPT'),bfChartGPT,logs.map(x=>x.date),logs.map(x=>+x.bodyfat_pct),'Masse grasse')}
-function drawBurnedKcalGPT(planRows){
-  const byDate={};
-  (planRows||[]).forEach(p=>{byDate[p.date]=(byDate[p.date]||0)+(+p.kcal_burned||0);});
+function drawBurnedKcalGPT(byDate){
+  byDate=byDate||{};
   const dates=Object.keys(byDate).sort().slice(-30);
   const ctx=document.getElementById('burnedKcalChartGPT');
   if(burnedKcalChartGPT)burnedKcalChartGPT.destroy();
