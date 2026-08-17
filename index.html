@@ -1876,7 +1876,7 @@ async function addWorkoutLogGPT(){
   document.getElementById('logCardioIntensityGPT').value='';
   loadWorkoutHistoryGPT();
 }
-async function editWorkoutGPT(id){
+async function editWorkoutGPT(id,refreshFn){
   const l=workoutLogsByIdGPT[id];if(!l)return;
   const values=await formUXGPT({title:'Modifier la performance',fields:[
     {label:'Poids (kg)',value:l.weight||''},
@@ -1885,11 +1885,11 @@ async function editWorkoutGPT(id){
   ],confirmText:'Enregistrer'});
   if(!values)return;
   const [weight,sets,reps]=values;
-  const {error}=await sb.from('workout_logs').update({weight,sets:+sets||0,reps}).eq('id',id);if(error){toastGPT(error.message,'error');return}toastGPT('Performance mise à jour');loadWorkoutHistoryGPT();
+  const {error}=await sb.from('workout_logs').update({weight,sets:+sets||0,reps}).eq('id',id);if(error){toastGPT(error.message,'error');return}toastGPT('Performance mise à jour');(refreshFn||loadWorkoutHistoryGPT)();
 }
-async function deleteWorkoutGPT(id){
+async function deleteWorkoutGPT(id,refreshFn){
   if(!(await confirmUXGPT({title:'Supprimer cette performance ?',text:"Cette entrée disparaîtra de l'historique de progression.",confirmText:'Supprimer',danger:true})))return;
-  const {error}=await sb.from('workout_logs').delete().eq('id',id);if(error)return toastGPT(error.message,'error');toastGPT('Performance supprimée');loadWorkoutHistoryGPT();
+  const {error}=await sb.from('workout_logs').delete().eq('id',id);if(error)return toastGPT(error.message,'error');toastGPT('Performance supprimée');(refreshFn||loadWorkoutHistoryGPT)();
 }
 
 async function saveTargetWeightGPT(){
@@ -2400,7 +2400,7 @@ async function loadSessionProgressGPT(){
   const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).in('exercise_id',exIds)
     .order('date',{ascending:false}).order('created_at',{ascending:false});
   const logsByExoGPT={};
-  (logs||[]).forEach(l=>{(logsByExoGPT[l.exercise_id]=logsByExoGPT[l.exercise_id]||[]).push(l);});
+  (logs||[]).forEach(l=>{(logsByExoGPT[l.exercise_id]=logsByExoGPT[l.exercise_id]||[]).push(l);workoutLogsByIdGPT[l.id]=l;});
   box.innerHTML=exos.map(pe=>{
     const exoLogs=(logsByExoGPT[pe.exercise_id]||[]).slice(0,12);
     const count=exoLogs.length;
@@ -2418,7 +2418,7 @@ async function loadSessionProgressGPT(){
         <div><h3 style="margin:0;font-size:13px">${escapeHtml(pe.exercises?.name||'Exercice')}</h3><p style="margin:3px 0 0;color:var(--muted);font-size:10px">${meta}</p></div>
         <div class="dayToggle" aria-label="Afficher ou masquer l'historique"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
       </div>
-      <div class="exoSeanceHistoryGPT">${chartBox}${exoLogs.map(l=>`<div class="listItemPremium"><div class="listMain"><b>${l.date}</b><span>${formatWorkoutGPT(l)}</span></div></div>`).join('')}</div>
+      <div class="exoSeanceHistoryGPT">${chartBox}${exoLogs.map(l=>`<div class="listItemPremium"><div class="listMain"><b>${l.date}</b><span>${formatWorkoutGPT(l)}</span></div><div class="actionIcons"><button class="iconAction edit" onclick="editWorkoutGPT('${l.id}',loadSessionProgressGPT)">✎</button><button class="iconAction delete" onclick="deleteWorkoutGPT('${l.id}',loadSessionProgressGPT)">×</button></div></div>`).join('')}</div>
     </div>`;
   }).join('');
 }
