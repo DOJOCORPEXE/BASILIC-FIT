@@ -218,7 +218,7 @@ button{cursor:pointer}
 .quickAddHead span{font-size:10px;color:var(--muted)}
 .foodResults{margin-top:8px;display:grid;gap:6px}
 .foodResult{
-  border:1px solid var(--line);background:rgba(255,255,255,.02);border-radius:13px;padding:12px 14px;
+  border:1px solid var(--line);background:rgba(15,15,15,.72);border-radius:13px;padding:12px 14px;
   display:flex;justify-content:space-between;gap:16px;align-items:center
 }
 .foodResult:hover{border-color:rgba(18,164,136,.25)}
@@ -1119,6 +1119,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <input id="qtyVal" class="fieldInput" type="number" value="100" min="0" step="1">
       <select id="qtyUnit" class="fieldSelect">
         <option value="g">grammes</option>
+        <option value="cl">cl</option>
         <option value="cas">c. à soupe</option>
         <option value="cac">c. à café</option>
         <option value="poignee">poignée</option>
@@ -1149,7 +1150,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     <div id="cfQtyRowGPT" class="fieldGrid" style="margin-top:10px">
       <input id="cfQtyGPT" class="fieldInput" type="number" value="100" placeholder="Quantité">
       <select id="cfQtyUnitGPT" class="fieldSelect">
-        <option value="g">grammes</option><option value="cas">c. à soupe</option>
+        <option value="g">grammes</option><option value="cl">cl</option><option value="cas">c. à soupe</option>
         <option value="cac">c. à café</option><option value="poignee">poignée</option>
       </select>
     </div>
@@ -1172,7 +1173,7 @@ let pendingFood=null;
 let searchTimeout=null;
 let lastMeals=[];
 
-const UNIT_G={g:1,cas:15,cac:5,poignee:25};
+const UNIT_G={g:1,cas:15,cac:5,poignee:25,cl:10};
 
 /* ===== UX helpers : toasts + modale générique (confirm / formulaire) ===== */
 function toastGPT(message,type,duration){
