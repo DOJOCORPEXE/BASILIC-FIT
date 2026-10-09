@@ -1,0 +1,29 @@
+# Empêche la mise en pause automatique du projet Supabase (plan gratuit :
+# pause après ~7 jours sans activité). Fait une vraie lecture en base.
+name: Supabase keepalive
+
+on:
+  schedule:
+    # Jours 1, 6, 11, 16, 21, 26, 31 de chaque mois à 06:17 UTC (écart max : 5 jours)
+    - cron: '17 6 */5 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Lecture d'une ligne de food_items
+        env:
+          SUPABASE_URL: https://dbizbwitbhsirbvetzmw.supabase.co
+          # Clé publique (anon), déjà exposée dans index.html
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaXpid2l0YmhzaXJidmV0em13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjExMTQsImV4cCI6MjEwMTY5NzExNH0.HJ2pvLF-9beT2x6OGTflp88ASHzmrNyTA5BjBjXBNmY
+        run: |
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' --retry 3 --retry-delay 20 --max-time 60 \
+            "$SUPABASE_URL/rest/v1/food_items?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "HTTP $code"
+          cat /tmp/out.json
+          # Un échec ici = mail GitHub : le projet est peut-être déjà en pause
+          test "$code" = "200"
