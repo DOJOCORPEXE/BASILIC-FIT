@@ -1060,7 +1060,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       <div class="sectionTitle"><div><div class="sectionKicker">Confidentialité</div><h2>Données du compte</h2><p>Les données sportives et nutritionnelles restent isolées par utilisateur via Supabase RLS.</p></div></div>
       <div class="inlineActions">
         <button class="ghostSm" onclick="signOutGPT()">Se déconnecter</button>
-        <button class="dangerSm" onclick="deleteAccountGPT()">Supprimer mes données</button>
+        <button class="dangerSm" onclick="deleteAccountGPT()">Supprimer mon compte</button>
       </div>
     </section>
   </section>
@@ -1980,7 +1980,18 @@ async function checkAutoAdjustGPT(){
 }
 async function signOutGPT(){await sb.auth.signOut();user=null;profile=null;showAuthGPT();toastGPT('Déconnecté')}
 async function deleteAccountGPT(){
-  if(!user||!(await confirmUXGPT({title:'Supprimer toutes mes données ?',text:'Cette action est irréversible : nutrition, entraînements, planning, poids, masse grasse et programme seront supprimés.',confirmText:'Supprimer définitivement',danger:true})))return;
+  if(!user||!(await confirmUXGPT({title:'Supprimer mon compte ?',text:'Cette action est irréversible : nutrition, entraînements, planning, poids, masse grasse, programme ET ton compte de connexion (e-mail, mot de passe) seront supprimés.',confirmText:'Supprimer définitivement',danger:true})))return;
+  /* Suppression complète côté serveur (schema22.sql) : données + compte de
+     connexion, en une seule transaction. Si la fonction n'existe pas encore
+     en base (PGRST202), repli sur l'ancienne suppression des seules données. */
+  const rpc=await sb.rpc('delete_my_account');
+  if(!rpc.error){
+    toastGPT('Compte et données supprimés.','success',4200);
+    await sb.auth.signOut({scope:'local'});
+    setTimeout(()=>location.reload(),1200);
+    return;
+  }
+  if(rpc.error.code!=='PGRST202')return toastGPT(rpc.error.message,'error');
   for(const t of ['meals','workout_logs','weight_logs','bodyfat_logs','planning','program_exercises','sessions']){
     const {error}=await sb.from(t).delete().eq('user_id',user.id);if(error)return toastGPT(error.message,'error');
   }
