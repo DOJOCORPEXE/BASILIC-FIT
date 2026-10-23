@@ -52,8 +52,11 @@
   <input id="weightLogVal"><input id="targetWeightVal"><div id="targetWeightInfo"></div><canvas id="weightChart"></canvas><div id="weightLogList"></div>
   <div id="legalBox"></div><div id="methodsBox"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Versions figées + empreintes (SRI) vérifiées contre les paquets npm officiels
+     le 23/10/2026 : un fichier modifié sur le CDN est refusé par le navigateur.
+     Pour mettre à jour : changer la version ET recalculer l'empreinte. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
 <style>
 :root{
   --bg:#151515;
@@ -1635,6 +1638,11 @@ function toggleNutritionDay(header){
   card.classList.toggle('open');
 }
 
+/* Lien externe : http(s) seulement (un "javascript:" stocké en base ne
+   doit jamais devenir cliquable). */
+function safeUrlGPT(u){
+  try{const x=new URL(String(u));return (x.protocol==='https:'||x.protocol==='http:')?x.href:'#';}catch(e){return '#';}
+}
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -1668,11 +1676,16 @@ async function searchFood(q){
     });
   }catch(e){console.warn(e)}
   document.getElementById('searchHint').textContent=`${all.length} résultat${all.length>1?'s':''}`;
-  results.innerHTML=all.length?all.slice(0,10).map((f,i)=>`<div class="foodResult">
-    <div><div class="foodName">${escapeHtml(f.name)}</div><div class="foodMeta">${Math.round(f.kcal100)} kcal / 100g · ${f.source}</div></div>
-    <button class="foodAddBtn" onclick='openFoodModal(${JSON.stringify(f).replace(/'/g,"&#39;")})'>+</button>
+  /* Les noms OpenFoodFacts sont modifiables par n'importe qui : jamais
+     injectés dans un attribut onclick (un "&quot;" y redevenait un vrai
+     guillemet → script exécuté). On passe par l'index du résultat. */
+  foodResultsGPT=all.slice(0,10);
+  results.innerHTML=foodResultsGPT.length?foodResultsGPT.map((f,i)=>`<div class="foodResult">
+    <div><div class="foodName">${escapeHtml(f.name)}</div><div class="foodMeta">${Math.round(f.kcal100)} kcal / 100g · ${escapeHtml(f.source)}</div></div>
+    <button class="foodAddBtn" onclick="openFoodModal(foodResultsGPT[${i}])">+</button>
   </div>`).join(''):`<div class="empty" style="padding:12px">Aucun résultat.</div>`;
 }
+let foodResultsGPT=[];
 function openFoodModal(food){
   pendingFood=food;
   document.getElementById('qtyTitle').textContent=food.name;
@@ -1848,7 +1861,7 @@ async function loadWorkoutHistoryGPT(){
   const last=logs.at(-1);
   document.getElementById('lastWorkoutGPT').textContent=last?`Dernière séance (${last.date}) : ${formatWorkoutGPT(last)}`:'Aucun historique';
   document.getElementById('workoutHistoryGPT').innerHTML=[...logs].reverse().slice(0,12).map(l=>`<div class="listItemPremium">
-    <div class="listMain"><b>${l.date}</b><span>${formatWorkoutGPT(l)}</span></div>
+    <div class="listMain"><b>${escapeHtml(l.date)}</b><span>${escapeHtml(formatWorkoutGPT(l))}</span></div>
     <div class="actionIcons"><button class="iconAction edit" onclick="editWorkoutGPT('${l.id}')">✎</button><button class="iconAction delete" onclick="deleteWorkoutGPT('${l.id}')">×</button></div>
   </div>`).join('');
 }
@@ -2069,7 +2082,7 @@ function renderExerciseLibraryPremium(){
       <b>${escapeHtml(e.name)}</b>
       <span>${escapeHtml(e.muscle_group||'Exercice')}${e.description?' · '+escapeHtml(e.description):''}</span>
       ${e.tips?`<span style="color:#8f918c">Conseil : ${escapeHtml(e.tips)}</span>`:''}
-      ${e.demo_url?`<span><a href="${escapeHtml(e.demo_url)}" target="_blank" rel="noopener" style="color:var(--emerald-hi);text-decoration:none">Voir la démo ↗</a></span>`:''}
+      ${e.demo_url?`<span><a href="${escapeHtml(safeUrlGPT(e.demo_url))}" target="_blank" rel="noopener" style="color:var(--emerald-hi);text-decoration:none">Voir la démo ↗</a></span>`:''}
     </div>
     <button class="ghostSm" onclick="addExerciseToSessionGPT('${e.id}')">Ajouter</button>
   </div>`).join('');
@@ -2125,7 +2138,7 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
   document.getElementById('workoutSubtitleGPT').textContent=`${exos.length} exercice${exos.length>1?'s':''}`;
   document.getElementById('workoutExercisesGPT').innerHTML=exos.map((pe,ei)=>{
     const cardio=pe.exercises?.muscle_group==='Cardio';
-    const demoLink=pe.exercises?.demo_url?` <a href="${escapeHtml(pe.exercises.demo_url)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:400;color:var(--emerald-hi);text-decoration:none;margin-left:8px">Voir la démo ↗</a>`:'';
+    const demoLink=pe.exercises?.demo_url?` <a href="${escapeHtml(safeUrlGPT(pe.exercises.demo_url))}" target="_blank" rel="noopener" style="font-size:11px;font-weight:400;color:var(--emerald-hi);text-decoration:none;margin-left:8px">Voir la démo ↗</a>`:'';
     if(cardio){
       const plannedMin=parseCardioMinutesGPT(pe.sets_reps);
       return `<div class="card exerciseCard" data-exo-idx="${ei}" data-cardio="1">
@@ -2157,7 +2170,7 @@ async function startWorkoutGPT(sessionId,planningId,sessionName){
     const last=lastPerfGPT[pe.exercise_id];
     const rows=Array.from({length:sets},(_,si)=>{
       const lw=last?.weights?.[si],lr=last?.reps?.[si];
-      const hint=(lw||lr)?`<div class="setLastGPT">Dernière fois (${shortDateFRGPT(last.date)}) : ${lw||'—'}kg × ${lr||'—'}</div>`:'';
+      const hint=(lw||lr)?`<div class="setLastGPT">Dernière fois (${shortDateFRGPT(last.date)}) : ${escapeHtml(lw||'—')}kg × ${escapeHtml(lr||'—')}</div>`:'';
       return `
       <div class="setRow">
         <div class="setIndex">${si+1}</div>
@@ -2391,34 +2404,38 @@ async function loadProgressGPT(){
 async function loadSessionProgressGPT(){
   if(!user)return;
   const sessionId=document.getElementById('progressSessionGPT').value;if(!sessionId)return;
-  const exos=programGPT.filter(p=>p.session_id===sessionId&&p.exercises?.muscle_group!=='Cardio');
+  const exos=programGPT.filter(p=>p.session_id===sessionId);
   const box=document.getElementById('progressSessionExosGPT');
   Object.values(exoProgressChartsGPT).forEach(c=>c?.destroy());
   exoProgressChartsGPT={};exoProgressDataGPT={};
-  if(!exos.length){box.innerHTML='<div class="empty">Aucun exercice de force dans cette séance.</div>';return;}
+  if(!exos.length){box.innerHTML='<div class="empty">Aucun exercice dans cette séance.</div>';return;}
   const exIds=[...new Set(exos.map(p=>p.exercise_id))];
   const {data:logs}=await sb.from('workout_logs').select('*').eq('user_id',user.id).in('exercise_id',exIds)
     .order('date',{ascending:false}).order('created_at',{ascending:false});
   const logsByExoGPT={};
   (logs||[]).forEach(l=>{(logsByExoGPT[l.exercise_id]=logsByExoGPT[l.exercise_id]||[]).push(l);workoutLogsByIdGPT[l.id]=l;});
   box.innerHTML=exos.map(pe=>{
+    const cardio=pe.exercises?.muscle_group==='Cardio';
     const exoLogs=(logsByExoGPT[pe.exercise_id]||[]).slice(0,12);
     const count=exoLogs.length;
     const meta=count?`${count} séance${count>1?'s':''} enregistrée${count>1?'s':''} · dernière le ${shortDateFRGPT(exoLogs[0].date)}`:'Aucun historique pour le moment';
-    /* Charge max par date (une valeur par jour, la plus haute si plusieurs
-       logs le même jour), triée chronologiquement pour le graphique — à ne
-       pas confondre avec exoLogs ci-dessus, trié récent → ancien pour la liste. */
+    /* Une valeur par date (la plus haute si plusieurs logs le même jour),
+       triée chronologiquement pour le graphique — à ne pas confondre avec
+       exoLogs ci-dessus, trié récent → ancien pour la liste. Charge max
+       (kg) pour la muscu, durée (min) pour le cardio — pas de "charge" au
+       sens musculation pour un exercice cardio (vélo, etc.). */
+    const chartLabel=cardio?'Durée (min)':'Charge max (kg)';
     const byDateMax={};
-    exoLogs.forEach(l=>{const mx=maxWeightGPT(l.weight);if(!(l.date in byDateMax)||mx>byDateMax[l.date])byDateMax[l.date]=mx;});
+    exoLogs.forEach(l=>{const mx=cardio?(+l.duration_min||0):maxWeightGPT(l.weight);if(!(l.date in byDateMax)||mx>byDateMax[l.date])byDateMax[l.date]=mx;});
     const chartDates=Object.keys(byDateMax).sort();
-    exoProgressDataGPT[pe.exercise_id]={dates:chartDates,values:chartDates.map(d=>byDateMax[d])};
+    exoProgressDataGPT[pe.exercise_id]={dates:chartDates,values:chartDates.map(d=>byDateMax[d]),label:chartLabel};
     const chartBox=count?`<div class="canvasWrap" style="height:130px;margin-top:10px"><canvas id="exoProgChart_${pe.exercise_id}"></canvas></div>`:'';
     return `<div class="exoProgressGroup collapsibleHistory">
       <div class="sectionTitle" onclick="toggleExoProgressGPT(this,'${pe.exercise_id}')">
         <div><h3 style="margin:0;font-size:13px">${escapeHtml(pe.exercises?.name||'Exercice')}</h3><p style="margin:3px 0 0;color:var(--muted);font-size:10px">${meta}</p></div>
         <div class="dayToggle" aria-label="Afficher ou masquer l'historique"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
       </div>
-      <div class="exoSeanceHistoryGPT">${chartBox}${exoLogs.map(l=>`<div class="listItemPremium"><div class="listMain"><b>${l.date}</b><span>${formatWorkoutGPT(l)}</span></div><div class="actionIcons"><button class="iconAction edit" onclick="editWorkoutGPT('${l.id}',loadSessionProgressGPT)">✎</button><button class="iconAction delete" onclick="deleteWorkoutGPT('${l.id}',loadSessionProgressGPT)">×</button></div></div>`).join('')}</div>
+      <div class="exoSeanceHistoryGPT">${chartBox}${exoLogs.map(l=>`<div class="listItemPremium"><div class="listMain"><b>${escapeHtml(l.date)}</b><span>${escapeHtml(formatWorkoutGPT(l))}</span></div><div class="actionIcons"><button class="iconAction edit" onclick="editWorkoutGPT('${l.id}',loadSessionProgressGPT)">✎</button><button class="iconAction delete" onclick="deleteWorkoutGPT('${l.id}',loadSessionProgressGPT)">×</button></div></div>`).join('')}</div>
     </div>`;
   }).join('');
 }
@@ -2432,7 +2449,7 @@ function toggleExoProgressGPT(header,exerciseId){
     const d=exoProgressDataGPT[exerciseId];
     if(d&&d.dates.length){
       const ctx=document.getElementById(`exoProgChart_${exerciseId}`);
-      if(ctx)exoProgressChartsGPT[exerciseId]=makeLineChart(ctx,null,d.dates,d.values,'Charge max (kg)');
+      if(ctx)exoProgressChartsGPT[exerciseId]=makeLineChart(ctx,null,d.dates,d.values,d.label||'Charge max (kg)');
     }
   }
 }
